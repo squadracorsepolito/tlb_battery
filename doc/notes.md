@@ -1,46 +1,76 @@
 # TSAL Latch Board Notes
-## Pin Renaming And Notes
+## Abbreviations
+- `TSAL`: tractive system active light
+- `SD`: shutdwon
+- `FB`: feedback
+- `FNL`: final
+- `MID`: middle
+- `RLY`: relay
+- `PRCH`: precarge
+- `DLY`: delay
+- `TS`: tractive system
+- `VEHS`: vehicle side = dopo gli air verso i motori partendo dall'accumulator
+- `BTRS`: battery side: prima degli air verso i motori partendo dall'accumulator
+- `CLSD`: closed
+- `EFCT`: effective
+- `IMPL`: implausibility
+- `LTCH`: latch
+- `INT`: intentional
+- `AUX`: auxiliary
+- `REL`: reliant
 
-|Pin #| Old name                     | New Name                               | Notes                                                                                                           |
-|-----|------------------------------|------------------------------------    |-------                                                                                                          |
-|PB9  |CAN_TX                        |SN65HVD23x_D_CAN1_TX                    | CAN BUS 2                                                                                                       |
-|PB8  |CAN_RX                        |SN65HVD23x_R_CAN1_RX                    | CAN BUS 2                                                                                                       |
-|PB3  |SWO                           |SYS_JTDO-SWO                            |JTAG/SWD signal: serial wire output                                                                              |
-|PC12 |SD_reading_3                  |SD_FDBK_IMD_ERR_RELAY_OUT_GPIO_IN       | shutdown feedback signal: output from RELAY drived by IMD ERROR circuitry                                       |
-|PC11 |ctrl_relay_prec_SD_direct_3.3V|SD_FDBK_PRCHRG_SD_CTRL_REALY_GPIO_IN    |                                                                                                                 |
-|PC10 |SD_reading_5                  |SD_FDBK_SD_FNL_IN_GPIO_IN               |                                                                                                                 |
-|PA15 |JTDI                          |SYS_JTDI                                |JTAG/SWD signal:                                                                                                 |
-|PA14 |SWCLK                         |SYS_JTCK-SWCLK                          |JTAG/SWD signal: serial wire Clock                                                                               |
-|PA13 |SEDIO                         |SYS_JTMS-SWDIO                          |JTAG/SWD signal: serfial wire data input output                                                                  |
-|PA11 |HV_signal_N_3.3V              |HV_FDBK_n60V_GPIO_IN                    |                                                                                                                 |
-|PA10 |AIR_POS_Closed_N_3.3V         |AIR_POS_FDBK_nCLOSED_GPIO_IN            |                                                                                                                 |
-|PA9  |AIR_NEG_Closed_N_3.3V         |AIR_NEG_FDBK_nCLOSED_GPIO_IN            |                                                                                                                 |
-|PA8  |IMP_AIR_POS_3.3V              |AIR_POS_FDBK_IMPL_ERR_GPIO_IN           |                                                                                                                 |
-|PC9  |IMP_PREC_HV_3.3V              |HV_PRCHRG_FDBK_IMPL_ERR_GPIO_IN         |                                                                                                                 |
-|PC8  |IMP_AIR_NEG_3.3V              |                                        |                                                                                                                 |
-|PC7  |IMP_HV_3.3V                   |                                        |                                                                                                                 |
-|PC6  |IMP_OUT_N_3.3V                |                                        |                                                                                                                 |
-|PB15 |LATCH_IMP_OUT_3.3V            |                                        |                                                                                                                 |
-|PB14 |SAL_GREEN_STATUS_3.3V         |                                        |                                                                                                                 |
-|PB13 |SCS_ERROR_N_3.3Vo             |                                        |                                                                                                                 |
-|PB12 |PREC_Closed_N_3.3V            |                                        |                                                                                                                 |
-|PB10 |Check_SCS_AIR_POS_3.3V        |                                        |                                                                                                                 |
-|PB2  |Check_SCS_AIR_NEG_3.3V        |                                        |                                                                                                                 |
-|PB1  |gpio_GREEN                    |LED_GREEN_GPIO_OUT                      |led color green - GPIO OUT                                                                                       |
-|PB0  |gpio_BLUE                     |LED_BLUE_GPIO_OUT                       |led color blue - GPIO out                                                                                        |
-|PC5  |ORANGE_LED                    |LED_ORANGE_GPIO_OUT                     |led color orange - GPIO out                                                                                      |
-|PC4  |gpio_RED                      |LED_RED_GPIO_OUT                        |led color red - GPIO out                                                                                         |
-|PA7  |PREC_TS_INTENTIONAL_STATE_3.3V|BMS_CMD_FDBK_TS_PRCHRG_RELAY_OUT_GPIO_IN|bms hv command feedback: tractive system prcharge signal relay output (intentiona state) - GPIO input reading    |
-|PA6  |AIR_NEG_INTENTIONAL_STATE_3.3V|BMS_CMD_FDBK_AIR_NEG_RELAY_OUT_GPIO_IN  |bms hv command feedback: air negative ON/OFF signal realay output (intentional state) - GPIO input reading       |
-|PA5  |AIR_POS_INTENTIONAL_STATE_3.3V|BMS_CMD_FDBK_AIR_POS_REALY_OUT_GPIO_IN  |bms hv command feedback: air positive ON/OFF signal realay output (intentional state) - GPIO input reading       |
-|PA4  |AMS_ERR_neg_3.3V              |TLB_FDBK_nAMS_ERR_GPIO_IN               | TLB circuitry feedback: inverted (n == not) AMS error control signal (off == ERROR) - GPIO input reading        |
-|PA3  |USART_RX                      |T_VCP_RX_USART_RX                       |target virtual comm port rx - usart rx                                                                           |
-|PA2  |USART_TX                      |T_VCP_TX_USART_TX                       |target virtual comm port tx - usart tx                                                                           |
-|PA1  |SD_reading_4_ADC              |SD_FDBK_SD_MID_OUT_ADC1_IN              |shutdown feedback signal: shutdown middle section otput - ADC input reading (0->3.3V, tipycal 3.0V)              |
-|PA0  |SD_reading_6_ADC              |SD_FDBK_SD_PRCHRG_CAPS_ADC1_IN          |sutdown feedback signal: shutdown precharge capacitors - ADC input reading reading (0->3.3V, tipycal 3.0V)       |
-|PC3  |SD_readinng_1                 |SD_FDBK_SD_MID_IN_GPIO_IN               |shutdown feedback signal: shutdown middle section input - GPIO input reading (on/off)                            |
-|PC1  |SD_reading_2                  |SD_FDBK_AMS_ERR_RELAY_OUT_GPIO_IN       |shutdown feedback signal: output from RELAY drived by AMS ERROR circuitry - GPIO input reading (on/off)          |
-|PC0  |IMD_ERR_neg_3.3V              |TLB_FDBK_nIMD_ERR_GPIO_IN               |TLB circuitry feedback: inverted (n == not) IMD error control signal (off == ERROR) - GPIO input reading         |
+## Pin Renaming And Notes
+ 
+|n|Pin #| Old name                     | New Name                                   | Notes                                                                                                                                                           |
+|-|-----|------------------------------|--------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|x|PB3  |SWO                           |SYS_JTDO-SWO                                |JTAG/SWD signal: serial wire output                                                                                                                              |
+|x|PA15 |JTDI                          |SYS_JTDI                                    |JTAG/SWD signal:                                                                                                                                                 |
+|x|PA14 |SWCLK                         |SYS_JTCK-SWCLK                              |JTAG/SWD signal: serial wire Clock                                                                                                                               |
+|x|PA13 |SWDIO                         |SYS_JTMS-SWDIO                              |JTAG/SWD signal: serfial wire data input output                                                                                                                  |
+|x|PA3  |USART_RX                      |T_VCP_RX_USART_RX                           |target virtual comm port rx - usart rx                                                                                                                           |
+|x|PA2  |USART_TX                      |T_VCP_TX_USART_TX                           |target virtual comm port tx - usart tx                                                                                                                           |
+|x|PB9  |CAN_TX                        |SN65HVD23x_D_CAN1_TX                        |CAN BUS 2                                                                                                                                                        |
+|x|PB8  |CAN_RX                        |SN65HVD23x_R_CAN1_RX                        |CAN BUS 2                                                                                                                                                        |
+|x|PB1  |gpio_GREEN                    |LED_GREEN_GPIO_OUT                          |led color green - GPIO out                                                                                                                                       |
+|x|PB0  |gpio_BLUE                     |LED_BLUE_GPIO_OUT                           |led color blue - GPIO out                                                                                                                                        |
+|x|PC5  |ORANGE_LED                    |LED_ORANGE_GPIO_OUT                         |led color orange - GPIO out                                                                                                                                      |
+|x|PC4  |gpio_RED                      |LED_RED_GPIO_OUT                            |led color red - GPIO out                                                                                                                                         |
+|x|PA4  |AMS_ERR_neg_3.3V              |FB_nAMS_ERR_GPIO_IN                         |TLB circuitry feedback: inverted (n == not), AMS error control signal (off == ERROR) - GPIO input reading (on/off)                                               |
+|x|PC0  |IMD_ERR_neg_3.3V              |FB_nIMD_ERR_GPIO_IN                         |TLB circuitry feedback: inverted (n == not), IMD error control signal (off == ERROR) - GPIO input reading (on/off)                                               |
+|x|PC11 |ctrl_relay_prec_SD_direct_3.3V|FB_SD_PRCH_RLY_GPIO_IN                      |TLB circuitry feedback: - GPIO input reading (on/off)                                                                                                            |
+|x|PC3  |SD_reading_1                  |SD_FB_SD_MID_IN_TO_AMS_ERR_RLY_GPIO_IN      |shutdown feedback signal: shutdown status from middle section input to AMS ERROR realy - GPIO input reading (on/off)                                             |
+|x|PC1  |SD_reading_2                  |SD_FB_AMS_ERR_RLY_TO_IMD_ERR_RLY_GPIO_IN    |shutdown feedback signal: shutdown status from AMS ERROR relay to IMD ERROR relay - GPIO input reading (on/off)                                                  |
+|x|PC12 |SD_reading_3                  |SD_FB_IMD_ERR_RLY_TO_SD_PRCH_RLY_GPIO_IN    |shutdown feedback signal: shutdown status from IMD ERROR relay to shutdown precharge relay - GPIO input reading (on/off)                                         |
+|x|PA1  |SD_reading_4_ADC              |SD_FB_SD_PRCH_TO_SD_MID_OUT_ADC1_IN         |shutdown feedback signal: shutdown status from shutdown precharge realy to middle section otput - ADC input reading (0->3.3V, tipycal 3.0V)                      |
+|x|PC10 |SD_reading_5                  |SD_FB_SD_FNL_IN_TO_SD_DLY_CAPS_GPIO_IN      |shutdwon feedback signal: shutdown status from shutdown final section input to shutdown delay caps - GPIO input reading (on/off)                                 |
+|x|PA0  |SD_reading_6_ADC              |SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN|shutdown feedback signal: shutdown status from shutdown delay capacitors to shutdown final section output AIRs- ADC input reading reading (0->3.3V, tipycal 3.0V)|
+|x|PB13 |SCS_ERROR_N_3.3Vo             |FB_nSHRT2GND_AIRS_GPIO_IN                   |TLB circuitry feedback: short to ground of both AIRs - GPIO input reading (on/off)                                                                               |
+|x|PB10 |Check_SCS_AIR_POS_3.3V        |FB_SHRT2GND_AIR_POS_GPIO_IN                 |TLB circuitry feedback: short to ground of AIR positive - GPIO input reading (on/off)                                                                            |
+|x|PB2  |Check_SCS_AIR_NEG_3.3V        |FB_SHRT2GND_AIR_NEG_GPIO_IN                 |TLB circuitry feedback: short to ground of AIR negative - GPIO input reading (on/off)                                                                            |
+|x|PA11 |HV_signal_N_3.3V              |FB_nDCBUS_OVER_60V_GPIO_IN                  |TLB circuitry feedback: inverted (n == not), high voltage DC bus (post AIR+) over 60V - GPIO input reading (on/off)                                              |
+|x|PA6  |AIR_NEG_INTENTIONAL_STATE_3.3V|FB_AIR_NEG_INT_SD_REL_GPIO_IN               |TLB circuitry feedback: air negative closed ON/OFF, intentional state signal, shutdown reliant - GPIO input reading (on/off)                                     |
+|x|PA5  |AIR_POS_INTENTIONAL_STATE_3.3V|FB_AIR_POS_INT_SD_REL_GPIO_IN               |TLB circuitry feedback: air positive closed ON/OFF, intentional state signal, shutdown reliant - GPIO input reading (on/off)                                     |
+|x|PA7  |PREC_TS_INTENTIONAL_STATE_3.3V|FB_DCBUS_PRCH_RLY_INT_SD_REL_GPIO_IN        |TLB circuitry feedback: high voltage DC bus precharge relay closed ON/OFF, intentional state signal, shutdown reliant - GPIO input reading (on/off)              |
+|x|PA9  |AIR_NEG_Closed_N_3.3V         |FB_nAIR_NEG_AUX_GPIO_IN                     |TLB circuitry feedback: inverted (n == not), AIR negaitve closed ON/OFF auxiliary output (actual state) - GPIO input reading (on/off)                            |
+|x|PA10 |AIR_POS_Closed_N_3.3V         |FB_nAIR_POS_AUX_GPIO_IN                     |TLB circuitry feedback: inverted (n == not), AIR positive closed ON/OFF auxiliary output (actual state) - GPIO input reading (on/off)                            |
+|x|PB12 |PREC_Closed_N_3.3V            |FB_nDCBUS_PRCH_RLY_AUX_GPIO_IN              |TLB circuitry feedback: inverted (n == not), high voltage DC bus precharge relay closed ON/OFF auxiliary output (actual state) - GPIO input reading (on/off)     |
+|x|PC8  |IMP_AIR_NEG_3.3V              |FB_AIR_NEG_IMPL_ERR_GPIO_IN                 |TLB circuitry feedback: AIR negative implausibility error ON/OFF (AIR_NEX_AUX != AIR_NEG_INT) - GPIO input reading (on/off)                                      |
+|x|PA8  |IMP_AIR_POS_3.3V              |FB_AIR_POS_IMPL_ERR_GPIO_IN                 |TLB circuitry feedback: AIR positive implausibility error ON/OFF (AIR_POS_AUX != AIR_POS_INT) - GPIO input reading (on/off)                                      |
+|x|PC9  |IMP_PREC_HV_3.3V              |FB_DCBUS_PRCH_RLY_IMPL_ERR_GPIO_IN          |TLB circuitry feedback: high voltage DC bus precharge reelay implausibility error ON/OFF (DCBUS_PRCH_RLY_AUX != DCBUS_PRCH_RLY_INT) - GPIO input reading (on/off)|
+|x|PC7  |IMP_HV_3.3V                   |FB_DCBUS_OVER_60V_IMPL_ERR_GPIO_IN          |TLB circuitry feedback: high voltage DC bus over 60V implausibility error ON/OFF (note below) - GPIO input reading (on/off)                                      |
+|x|PC6  |IMP_OUT_N_3.3V                |FB_nANY_IMPL_ERR_GPIO_IN                    |TLB circuitry feedback: inverted (n == not), any type/general-case implausibility error in TLB - GPIO input reading (on/off)                                     |
+|x|PB15 |LATCH_IMP_OUT_3.3V            |FB_ANY_IMPL_ERR_LTCH_GPIO_IN                |TLB circuitry feedback: any type/general case implausibility error in TLB, latched value - GPIO input reading (on/off)                                           |
+|x|PB14 |TSAL_GREEN_STATUS_3.3V        |FB_TSAL_GREEN_GPIO_IN                       |TLB circuitry feedback: Tractive System Active Light green status - GPIO input reading (on/off)                                                                  |
+### DCBUS_OVER_60V_IMPL_ERR notes
+The calculation of this implausibility is done in hardware as:
+```
+( [(AIR_POS_INT OR DCBUS_PRCH_RLY_INT) AND AIR_NEG_INT] AND nDCBUS_OVER_60V ) => DCBUS_OVER_60V_IMPL_ERR
+```
+That in words is described as:
+- if I have either active positive air on or dcbus precharge relay on
+    - and the air negative is on
+        - then if DCBUS is not over 60V 
+            - then WE HAVE implausibility error
 
 ## Additional Schematics Changes
 - IN1, OUT1 -> MID_IN, MID_OUT
