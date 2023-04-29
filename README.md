@@ -1,6 +1,8 @@
-# TSAL Latch Board Firmware
----
+# TSAL Latch Board - Battery Side - Firmware
+
 ![3d_pcb_view](./doc/media/TLB_PCB_3D_view.png)
+
+---
 
 ## Dependencies
 - `CMake`
