@@ -11,9 +11,13 @@
 - `STM32CubeMx`
 
 ## Compile
+To compile the code in Debug configuration (standard method)
 ```
-cmake 
-make clean
+make
+```
+To compile the code in Release configuration (optimized, no debug symbols)
+```
+make BUILD_TYPE=Release
 ```
 ## Flash On Linux
 1) the stlink programmer is correctly connected.
