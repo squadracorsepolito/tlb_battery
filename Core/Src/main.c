@@ -52,7 +52,12 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void disable_led() {
+    HAL_GPIO_WritePin(LED_GREEN_GPIO_OUT_GPIO_Port, LED_GREEN_GPIO_OUT_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(LED_RED_GPIO_OUT_GPIO_Port, LED_RED_GPIO_OUT_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(LED_ORANGE_GPIO_OUT_GPIO_Port, LED_ORANGE_GPIO_OUT_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(LED_BLUE_GPIO_OUT_GPIO_Port, LED_BLUE_GPIO_OUT_Pin, GPIO_PIN_RESET);
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -98,12 +103,25 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+    while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+        HAL_Delay(1000);
+        disable_led();
+        HAL_GPIO_WritePin(LED_ORANGE_GPIO_OUT_GPIO_Port, LED_ORANGE_GPIO_OUT_Pin, GPIO_PIN_SET);
+        HAL_Delay(1000);
+        disable_led();
+        HAL_GPIO_WritePin(LED_RED_GPIO_OUT_GPIO_Port, LED_RED_GPIO_OUT_Pin, GPIO_PIN_SET);
+        HAL_Delay(1000);
+        disable_led();
+        HAL_GPIO_WritePin(LED_GREEN_GPIO_OUT_GPIO_Port, LED_GREEN_GPIO_OUT_Pin, GPIO_PIN_SET);
+        HAL_Delay(1000);
+        disable_led();
+        HAL_GPIO_WritePin(LED_BLUE_GPIO_OUT_GPIO_Port, LED_BLUE_GPIO_OUT_Pin, GPIO_PIN_SET);
+        HAL_Delay(1000);
+        disable_led();
+    }
   /* USER CODE END 3 */
 }
 
@@ -159,11 +177,10 @@ void SystemClock_Config(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+    /* User can add his own implementation to report the HAL error return state */
+    __disable_irq();
+    while (1) {
+    }
   /* USER CODE END Error_Handler_Debug */
 }
 
@@ -178,7 +195,7 @@ void Error_Handler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
+    /* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 }
