@@ -1,6 +1,6 @@
 # TSAL Latch Board - Battery Side - Firmware
 
-![3d_pcb_view](./doc/media/TLB_PCB_3D_view.png)
+![3d_pcb_view](./Doc/media/TLB_PCB_3D_view.png)
 
 ---
 
