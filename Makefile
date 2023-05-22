@@ -48,13 +48,13 @@ build: cmake
 #######################################
 # Generating the .elf/.hex/.bin depends on running CMAKE and generating the makefile
 
-$(BUILD_DIR)/$(PROJECT_NAME).elf:$(BUILD_DIR)/Makefile
-$(BUILD_DIR)/$(PROJECT_NAME).hex:$(BUILD_DIR)/Makefile
-$(BUILD_DIR)/$(PROJECT_NAME).bin:$(BUILD_DIR)/Makefile
+$(BUILD_DIR)/$(PROJECT_NAME).elf: build
+$(BUILD_DIR)/$(PROJECT_NAME).hex: build
+$(BUILD_DIR)/$(PROJECT_NAME).bin: build
 
 # Flashing can happen only if the compile output is built
 flash: $(BUILD_DIR)/$(PROJECT_NAME).elf
-	"/run/current-system/sw/bin/openocd" -f ./openocd.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
+	"/run/current-system/sw/bin/openocd" -f ./openocd.cfg -c "program $(BUILD_DIR)/$(PROJECT_NAME).elf verify reset exit"
 
 #######################################
 # debug
