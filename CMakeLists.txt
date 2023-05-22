@@ -37,11 +37,16 @@ find_package(CMSIS COMPONENTS STM32F4 REQUIRED)
 find_package(HAL COMPONENTS STM32F4 REQUIRED)
 
 set(PROJECT_INCLUDE_DIRECTORIES 
-    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc)
+    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Lib/stmlibs/ 
+    ${CMAKE_CURRENT_SOURCE_DIR}/Lib/stmlibs/timer_utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/Lib/stmlibs/timebase)
 
 # globbing recursive search
 file(GLOB_RECURSE PROJECT_C_SOURCES FOLLOW_SYMLINKS
-    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/*.c)
+    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Lib/stmlibs/timebase/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Lib/stmlibs/timer_utils/*.c)
 
 # globbing search
 file(GLOB PROJECT_ASM_SOURCES 
