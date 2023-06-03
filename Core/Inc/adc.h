@@ -1,21 +1,14 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file    adc.h
-  * @brief   This file contains all the function prototypes for
-  *          the adc.c file
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ * @file      adc.h
+ * @prefix    uADC (userADC)
+ * @author    Simone Ruffini [simone.ruffini.work@gmail.com | simone.ruffini@squadracorse.com]
+ * @date      Thu Jun  1 07:14:33 PM CEST 2023
+ *
+ * @brief   This file contains all the function prototypes for the adc.c file
+ *
+ * @license Licensed under "THE BEER-WARE LICENSE", Revision 69 (see LICENSE)
+ */
 /* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __ADC_H__
@@ -35,7 +28,8 @@ extern "C" {
 extern ADC_HandleTypeDef hadc1;
 
 /* USER CODE BEGIN Private defines */
-
+extern uint32_t adc_raw_data_filtered[2];
+extern uint32_t adc_raw_data[2];
 /* USER CODE END Private defines */
 
 void MX_ADC1_Init(void);
