@@ -90,12 +90,17 @@ target_link_libraries(${PROJECT_NAME}
     #CMSIS::STM32::F446xx # this target adds common includes, compiler flags and startup file (TODO: change to STM32::F4, startup file should be added manually)
     CMSIS::STM32::F4
     HAL::STM32::F4::ADC
+    HAL::STM32::F4::ADCEx
     HAL::STM32::F4::CAN
     HAL::STM32::F4::CORTEX
+    HAL::STM32::F4::PWR
+    HAL::STM32::F4::PWREx
     HAL::STM32::F4::DMA
+    HAL::STM32::F4::DMAEx
     HAL::STM32::F4::EXTI
     HAL::STM32::F4::GPIO
     HAL::STM32::F4::RCC
+    HAL::STM32::F4::RCCEx
     HAL::STM32::F4::TIM
     HAL::STM32::F4::TIMEx
     HAL::STM32::F4::UART
@@ -112,4 +117,4 @@ stm32_generate_hex_file(${PROJECT_NAME})
 
 stm32_print_size_of_target(${PROJECT_NAME})
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ls -al "$<TARGET_FILE:${PROJECT_NAME}>" VERBATIM)
+#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ls -al "$<TARGET_FILE:${PROJECT_NAME}>" VERBATIM)
