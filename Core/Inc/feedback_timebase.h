@@ -1,8 +1,9 @@
 /**
- * @file feedback_timebase.h
- * @group FBTMBS
- * @author Simone Ruffini [simone.ruffini.work@gmail.com]
- * @date Tue May 23 03:33:07 PM CEST 2023
+ * @file    feedback_timebase.h
+ * @prefix  FBTMBS
+ * @author  Simone Ruffini [simone.ruffini.work@gmail.com | simone.ruffini@squadracorse.com]
+ * @date    Tue May 23 03:33:07 PM CEST 2023
+ *
  * @brief Header file for feedback reading using timebase library of stmlibs
  *
  * @license Licensed under "THE BEER-WARE LICENSE", Revision 69 (see LICENSE)

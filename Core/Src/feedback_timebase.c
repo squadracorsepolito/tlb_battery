@@ -1,8 +1,9 @@
 /**
- * @file feedback_timabase.c
- * @prefix FBTMBS
- * @author Simone Ruffini [simone.ruffini.work@gmail.com]
- * @date Tue May 23 03:33:07 PM CEST 2023
+ * @file    feedback_timabase.c
+ * @prefix  FBTMBS
+ * @author  Simone Ruffini [simone.ruffini.work@gmail.com | simone.ruffini@squadracorse.com]
+ * @date    Tue May 23 03:33:07 PM CEST 2023
+ *
  * @brief Source file for feedback reading using timebase library of stmlibs
  *
  * @license Licensed under "THE BEER-WARE LICENSE", Revision 69 (see LICENSE)
@@ -11,7 +12,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "feedback_timebase.h"
 
+#include "adc.h"
 #include "db.h"
+#include "main.h"
 #include "tim.h"
 
 #include <stdio.h>
@@ -43,8 +46,9 @@
 TIMEBASE_HandleTypeDef hfbtmbs = {0}; /*!< feedback timebase handle */
 
 /* Private function prototypes -----------------------------------------------*/
-static STMLIBS_StatusTypeDef sample_shutdown_fb(void);
-static STMLIBS_StatusTypeDef sample_fb(void);
+static STMLIBS_StatusTypeDef _sample_shutdown_fb(void);
+static STMLIBS_StatusTypeDef _sample_tlb_signals_fb(void);
+static STMLIBS_StatusTypeDef _sample_fb(void);
 
 /* Exported functions --------------------------------------------------------*/
 void FBTMBS_init(void) {
@@ -55,7 +59,7 @@ void FBTMBS_init(void) {
 
     // Generate a timebase and use the returned referecne index to associate a callback
     TIMEBASE_add_interval(&hfbtmbs, __FBTMBS_READ_FB_INTERVAL_US, &timebase_ref_idx);
-    TIMEBASE_register_callback(&hfbtmbs, timebase_ref_idx, &sample_fb);
+    TIMEBASE_register_callback(&hfbtmbs, timebase_ref_idx, &_sample_fb);
 }
 
 void FBTMBS_routines_runner(void) {
@@ -69,24 +73,62 @@ void FBTMBS_routines_runner(void) {
 * @retval return status: - STMLIBS_OK if procedure completed without errors
 *                        - STMLIBS_ERROR otherwise
 */
-static STMLIBS_StatusTypeDef sample_shutdown_fb(void) {
-    db_shtdwn_fb.sd_mid_in_to_ams_err_rly       = __GPIO_READPIN_DECIMAL(SD_FB_SD_MID_IN_TO_AMS_ERR_RLY_GPIO_IN);
-    db_shtdwn_fb.ams_err_rly_to_imd_err_rly     = __GPIO_READPIN_DECIMAL(SD_FB_AMS_ERR_RLY_TO_IMD_ERR_RLY_GPIO_IN);
-    db_shtdwn_fb.imd_err_rly_to_sd_prch_rly     = __GPIO_READPIN_DECIMAL(SD_FB_IMD_ERR_RLY_TO_SD_PRCH_RLY_GPIO_IN);
-    db_shtdwn_fb.sd_prch_rly_to_sd_mid_out      = 0;  // TODO: add adc reading
-    db_shtdwn_fb.sd_fnl_in_to_sd_dly_caps       = __GPIO_READPIN_DECIMAL(SD_FB_SD_FNL_IN_TO_SD_DLY_CAPS_GPIO_IN);
-    db_shtdwn_fb.sd_dly_caps_to_sd_fin_out_airs = 0;  // TODO: add adc reading
-    db_shtdwn_fb.sample_tick                    = HAL_GetTick();
+static STMLIBS_StatusTypeDef _sample_shutdown_fb(void) {
+    DB_shtdwn_fb.sd_mid_in_to_ams_err_rly   = __GPIO_READPIN_DECIMAL(SD_FB_SD_MID_IN_TO_AMS_ERR_RLY_GPIO_IN);
+    DB_shtdwn_fb.ams_err_rly_to_imd_err_rly = __GPIO_READPIN_DECIMAL(SD_FB_AMS_ERR_RLY_TO_IMD_ERR_RLY_GPIO_IN);
+    DB_shtdwn_fb.imd_err_rly_to_sd_prch_rly = __GPIO_READPIN_DECIMAL(SD_FB_IMD_ERR_RLY_TO_SD_PRCH_RLY_GPIO_IN);
+    DB_shtdwn_fb.sd_prch_rly_to_sd_mid_out_mV =
+        ADC_Get_Filtered_Real(&SD_FB_ADC_Handle, SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_ADC_CHNL);
+    DB_shtdwn_fb.sd_fnl_in_to_sd_dly_caps = __GPIO_READPIN_DECIMAL(SD_FB_SD_FNL_IN_TO_SD_DLY_CAPS_GPIO_IN);
+    DB_shtdwn_fb.sd_dly_caps_to_sd_fin_out_airs_mV =
+        ADC_Get_Filtered_Real(&SD_FB_ADC_Handle, SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_ADC_CHNL);
+    DB_shtdwn_fb.sample_tick = HAL_GetTick();
     return STMLIBS_OK;
 }
+
+static STMLIBS_StatusTypeDef _sample_tlb_signals_fb(void) {
+    DB_tlb_sig_fb.ams_err     = ~__GPIO_READPIN_DECIMAL(FB_nAMS_ERR_GPIO_IN);
+    DB_tlb_sig_fb.imd_err     = ~__GPIO_READPIN_DECIMAL(FB_nIMD_ERR_GPIO_IN);
+    DB_tlb_sig_fb.sd_prch_rly = __GPIO_READPIN_DECIMAL(FB_SD_PRCH_RLY_GPIO_IN);
+
+    DB_tlb_sig_fb.shrt2gnd_air_neg = __GPIO_READPIN_DECIMAL(FB_SHRT2GND_AIR_NEG_GPIO_IN);
+    DB_tlb_sig_fb.shrt2gnd_air_pos = __GPIO_READPIN_DECIMAL(FB_SHRT2GND_AIR_POS_GPIO_IN);
+    DB_tlb_sig_fb.shrt2gnd_airs    = ~__GPIO_READPIN_DECIMAL(FB_nSHRT2GND_AIRS_GPIO_IN);
+
+    DB_tlb_sig_fb.dcbus_over_60v = ~__GPIO_READPIN_DECIMAL(FB_nDCBUS_OVER_60V_GPIO_IN);
+
+    DB_tlb_sig_fb.air_neg_int_sd_rel        = __GPIO_READPIN_DECIMAL(FB_AIR_NEG_INT_SD_REL_GPIO_IN);
+    DB_tlb_sig_fb.air_pos_int_sd_rel        = __GPIO_READPIN_DECIMAL(FB_AIR_POS_INT_SD_REL_GPIO_IN);
+    DB_tlb_sig_fb.dcbus_prch_rly_int_sd_rel = __GPIO_READPIN_DECIMAL(FB_DCBUS_PRCH_RLY_INT_SD_REL_GPIO_IN);
+
+    DB_tlb_sig_fb.air_neg_aux        = ~__GPIO_READPIN_DECIMAL(FB_nAIR_NEG_AUX_GPIO_IN);
+    DB_tlb_sig_fb.air_pos_aux        = ~__GPIO_READPIN_DECIMAL(FB_nAIR_POS_AUX_GPIO_IN);
+    DB_tlb_sig_fb.dcbus_prch_rly_aux = ~__GPIO_READPIN_DECIMAL(FB_nDCBUS_PRCH_RLY_AUX_GPIO_IN);
+
+    DB_tlb_sig_fb.air_neg_impl_err        = __GPIO_READPIN_DECIMAL(FB_AIR_NEG_IMPL_ERR_GPIO_IN);
+    DB_tlb_sig_fb.air_pos_impl_err        = __GPIO_READPIN_DECIMAL(FB_AIR_POS_IMPL_ERR_GPIO_IN);
+    DB_tlb_sig_fb.dcbus_prch_rly_impl_err = __GPIO_READPIN_DECIMAL(FB_DCBUS_PRCH_RLY_IMPL_ERR_GPIO_IN);
+
+    DB_tlb_sig_fb.dcbus_over_60v_impl_err = __GPIO_READPIN_DECIMAL(FB_DCBUS_OVER_60V_IMPL_ERR_GPIO_IN);
+
+    DB_tlb_sig_fb.any_impl_err      = ~__GPIO_READPIN_DECIMAL(FB_nANY_IMPL_ERR_GPIO_IN);
+    DB_tlb_sig_fb.any_impl_err_ltch = __GPIO_READPIN_DECIMAL(FB_ANY_IMPL_ERR_LTCH_GPIO_IN);
+
+    DB_tlb_sig_fb.tsal_green = __GPIO_READPIN_DECIMAL(FB_TSAL_GREEN_GPIO_IN);
+
+    DB_tlb_sig_fb.sample_tick = HAL_GetTick();
+    return STMLIBS_OK;
+}
+
 /**
 * @brief  Sample all feedback signals and store sampled values 
 * @retval return status: - STMLIBS_OK if procedure completed without errors
 *                        - STMLIBS_ERROR otherwise
 */
-static STMLIBS_StatusTypeDef sample_fb(void) {
+static STMLIBS_StatusTypeDef _sample_fb(void) {
     STMLIBS_StatusTypeDef ret = STMLIBS_OK;
-    ret                       = sample_shutdown_fb();
+    ret                       = _sample_shutdown_fb();
     // TODO implement some sort of error checking and logging
+    ret                       = _sample_tlb_signals_fb();
     return ret;
 }

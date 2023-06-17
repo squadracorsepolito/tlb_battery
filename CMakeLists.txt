@@ -105,11 +105,11 @@ target_link_libraries(${PROJECT_NAME}
     HAL::STM32::F4::TIMEx
     HAL::STM32::F4::UART
     STM32::Nano
+    STM32::Nano::FloatPrint # Add printf/sprintf/... floating point functionality
     STM32::NoSys # already adds the -lnosys option
     #-lc # adds the -lc linking library
     #-lm # adds the -lm linging library
     #-lnosys # automatycally added by linking to NoSys
-    #STM32::Nano::FloatPrintf
 )
 
 stm32_generate_binary_file(${PROJECT_NAME})

@@ -28,7 +28,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "db.h"
 #include "feedback_timebase.h"
+
+#include <stdio.h>
+#include <string.h>
 
 /* USER CODE END Includes */
 
@@ -49,6 +53,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+#define VCP_TX_LOG_BUF_MAX_TIMEOUT_MS (30U)  //~27ms are necessary to send 400 chars via UART@115kbit/s
 
 /* USER CODE END PV */
 
@@ -96,10 +101,10 @@ int main(void) {
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_DMA_Init();
+    MX_TIM2_Init();
     MX_ADC1_Init();
     MX_CAN1_Init();
     MX_USART2_UART_Init();
-    MX_TIM2_Init();
     MX_TIM6_Init();
     /* USER CODE BEGIN 2 */
     FBTMBS_init();
@@ -107,6 +112,15 @@ int main(void) {
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+    char log_buf[400]  = {0};  // init logging buffer
+    uint32_t cnt_100ms = HAL_GetTick() + 100U;
+
+    // Send CSV header to VCP if enabled
+    sprintf(log_buf, "%s,", DB_shtdwn_fb.csv_header_string);
+    HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
+    sprintf(log_buf, "%s;\n\r", DB_tlb_sig_fb.csv_header_string);
+    HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
+
     while (1) {
         /* USER CODE END WHILE */
 
@@ -114,20 +128,16 @@ int main(void) {
         // Execute the feedback timebase routines runner
         FBTMBS_routines_runner();
 
-        HAL_Delay(1000);
-        disable_led();
-        HAL_GPIO_WritePin(LED_ORANGE_GPIO_OUT_GPIO_Port, LED_ORANGE_GPIO_OUT_Pin, GPIO_PIN_SET);
-        HAL_Delay(1000);
-        disable_led();
-        HAL_GPIO_WritePin(LED_RED_GPIO_OUT_GPIO_Port, LED_RED_GPIO_OUT_Pin, GPIO_PIN_SET);
-        HAL_Delay(1000);
-        disable_led();
-        HAL_GPIO_WritePin(LED_GREEN_GPIO_OUT_GPIO_Port, LED_GREEN_GPIO_OUT_Pin, GPIO_PIN_SET);
-        HAL_Delay(1000);
-        disable_led();
-        HAL_GPIO_WritePin(LED_BLUE_GPIO_OUT_GPIO_Port, LED_BLUE_GPIO_OUT_Pin, GPIO_PIN_SET);
-        HAL_Delay(1000);
-        disable_led();
+        if (HAL_GetTick() >= cnt_100ms) {
+            cnt_100ms = HAL_GetTick() + 100U;
+            DB_SHTDWN_FB_ToStringCSV(&DB_shtdwn_fb, log_buf);
+            strcat(log_buf, ",");
+            HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
+            DB_TLB_SIG_FB_ToStringCSV(&DB_tlb_sig_fb, log_buf);
+            strcat(log_buf, ";\n\r");
+            HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
+        }
+
     }
     /* USER CODE END 3 */
 }
@@ -208,7 +218,7 @@ void Error_Handler(void) {
 void assert_failed(uint8_t *file, uint32_t line) {
     /* USER CODE BEGIN 6 */
     /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+     * ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
     /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

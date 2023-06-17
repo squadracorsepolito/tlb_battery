@@ -43,9 +43,10 @@ cmake: ${BUILD_DIR}/Makefile
 	touch ./CMakeLists.txt
 
 build: cmake
+	# -j: use alla available threads
     # -C: change to BUILD_DIR directory
     # --no-print-directory: don't show the above directory change in the log
-	$(MAKE) -C ${BUILD_DIR} --no-print-directory
+	$(MAKE) -j -C ${BUILD_DIR} --no-print-directory
 
 
 #######################################
