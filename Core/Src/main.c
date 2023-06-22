@@ -102,10 +102,10 @@ int main(void) {
     MX_GPIO_Init();
     MX_DMA_Init();
     MX_TIM2_Init();
+    MX_TIM6_Init();
     MX_ADC1_Init();
     MX_CAN1_Init();
     MX_USART2_UART_Init();
-    MX_TIM6_Init();
     /* USER CODE BEGIN 2 */
     FBTMBS_init();
     /* USER CODE END 2 */
@@ -113,7 +113,7 @@ int main(void) {
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     char log_buf[400]  = {0};  // init logging buffer
-    uint32_t cnt_100ms = HAL_GetTick() + 100U;
+    volatile uint32_t cnt_100ms = HAL_GetTick() + 100U;
 
     // Send CSV header to VCP if enabled
     sprintf(log_buf, "%s,", DB_shtdwn_fb.csv_header_string);
@@ -126,10 +126,11 @@ int main(void) {
 
         /* USER CODE BEGIN 3 */
         // Execute the feedback timebase routines runner
-        FBTMBS_routines_runner();
+        //FBTMBS_routines_runner();
 
         if (HAL_GetTick() >= cnt_100ms) {
             cnt_100ms = HAL_GetTick() + 100U;
+            _sample_fb();
             DB_SHTDWN_FB_ToStringCSV(&DB_shtdwn_fb, log_buf);
             strcat(log_buf, ",");
             HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
@@ -137,7 +138,6 @@ int main(void) {
             strcat(log_buf, ";\n\r");
             HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
         }
-
     }
     /* USER CODE END 3 */
 }

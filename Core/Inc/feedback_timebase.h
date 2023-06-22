@@ -38,6 +38,8 @@ void FBTMBS_init(void);
 */
 void FBTMBS_routines_runner(void);
 
+STMLIBS_StatusTypeDef _sample_fb(void);
+
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private constants ---------------------------------------------------------*/

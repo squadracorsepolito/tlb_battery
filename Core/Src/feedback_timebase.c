@@ -46,9 +46,9 @@
 TIMEBASE_HandleTypeDef hfbtmbs = {0}; /*!< feedback timebase handle */
 
 /* Private function prototypes -----------------------------------------------*/
-static STMLIBS_StatusTypeDef _sample_shutdown_fb(void);
-static STMLIBS_StatusTypeDef _sample_tlb_signals_fb(void);
-static STMLIBS_StatusTypeDef _sample_fb(void);
+STMLIBS_StatusTypeDef _sample_shutdown_fb(void);
+STMLIBS_StatusTypeDef _sample_tlb_signals_fb(void);
+STMLIBS_StatusTypeDef _sample_fb(void);
 
 /* Exported functions --------------------------------------------------------*/
 void FBTMBS_init(void) {
@@ -73,7 +73,7 @@ void FBTMBS_routines_runner(void) {
 * @retval return status: - STMLIBS_OK if procedure completed without errors
 *                        - STMLIBS_ERROR otherwise
 */
-static STMLIBS_StatusTypeDef _sample_shutdown_fb(void) {
+STMLIBS_StatusTypeDef _sample_shutdown_fb(void) {
     DB_shtdwn_fb.sd_mid_in_to_ams_err_rly   = __GPIO_READPIN_DECIMAL(SD_FB_SD_MID_IN_TO_AMS_ERR_RLY_GPIO_IN);
     DB_shtdwn_fb.ams_err_rly_to_imd_err_rly = __GPIO_READPIN_DECIMAL(SD_FB_AMS_ERR_RLY_TO_IMD_ERR_RLY_GPIO_IN);
     DB_shtdwn_fb.imd_err_rly_to_sd_prch_rly = __GPIO_READPIN_DECIMAL(SD_FB_IMD_ERR_RLY_TO_SD_PRCH_RLY_GPIO_IN);
@@ -86,7 +86,7 @@ static STMLIBS_StatusTypeDef _sample_shutdown_fb(void) {
     return STMLIBS_OK;
 }
 
-static STMLIBS_StatusTypeDef _sample_tlb_signals_fb(void) {
+STMLIBS_StatusTypeDef _sample_tlb_signals_fb(void) {
     DB_tlb_sig_fb.ams_err     = ~__GPIO_READPIN_DECIMAL(FB_nAMS_ERR_GPIO_IN);
     DB_tlb_sig_fb.imd_err     = ~__GPIO_READPIN_DECIMAL(FB_nIMD_ERR_GPIO_IN);
     DB_tlb_sig_fb.sd_prch_rly = __GPIO_READPIN_DECIMAL(FB_SD_PRCH_RLY_GPIO_IN);
@@ -125,10 +125,10 @@ static STMLIBS_StatusTypeDef _sample_tlb_signals_fb(void) {
 * @retval return status: - STMLIBS_OK if procedure completed without errors
 *                        - STMLIBS_ERROR otherwise
 */
-static STMLIBS_StatusTypeDef _sample_fb(void) {
+STMLIBS_StatusTypeDef _sample_fb(void) {
     STMLIBS_StatusTypeDef ret = STMLIBS_OK;
     ret                       = _sample_shutdown_fb();
     // TODO implement some sort of error checking and logging
-    ret                       = _sample_tlb_signals_fb();
+    ret = _sample_tlb_signals_fb();
     return ret;
 }

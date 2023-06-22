@@ -26,6 +26,16 @@
  *              - hdma_adc1.Init.MemInc = DMA_MINC_ENABLE; -> increase the memory address after each transfer
  *        - hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV; EndOfConversion event flag will be activated at the end of conversion of the sequence of channels/ranks instead of a single conversion (NOTE: interrupts must be enabled)
  *          - NOTE: IF DMA is enabled then setting EOCSelection as that will enable overrun detection feature
+          - hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD
+            - Peripheral data allignemtn for the DMA is halfword because the ADC Data Register (ADC.Instance.DR) is 16 bit wide.
+              This means that the trasnfer to memory will be necessary a halfword too!
+                  - hdma_adc1.Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD
+              Therefore since the DMA is set with memory autoincrease and circular mode (see above) this means that
+              the autoincrease will be by HALWORDS. 
+            @NOTE Therefore when HAL_ADC_Start_DMA(ADC_HandleTypeDef* hadc, uint32_t* pData, uint32_t Length) is called:
+              - sizeof(pData[0]) == hdma_adc1.Init.MemDataAlignment
+                otherwise, if greater (uint32_t pData[N]), the DMA will save data in the vector each 16 bits: 
+                a pData item will hold two values -> pData[0] = {[adc_conv1],[adc_conv0]};
  * @note ADC TIMINGS:
  *       - CHANNEL/RANK TOTAL SAMPLING CYCLES = sConfig.SamplingTime + hadc1.Init.Resolution(#ofbits) + 2 or 3 cycles (depending on resolution)
  *       - CHANNEL/RANK TOTAL SAMPLING TIME = (CHANNEL/RANK TOTAL SAMPLING CYCLES)/ADCCLK
@@ -47,7 +57,7 @@
 #include <tim.h>
 
 uint32_t adc_raw_data_filtered[2] = {0};
-uint32_t adc_raw_data[2]          = {0};
+uint16_t adc_raw_data[2]          = {0};
 
 /* USER CODE END 0 */
 
@@ -119,10 +129,11 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *adcHandle) {
         __HAL_RCC_ADC1_CLK_ENABLE();
 
         __HAL_RCC_GPIOA_CLK_ENABLE();
-        /**ADC1 GPIO Configuration
-    PA0-WKUP     ------> ADC1_IN0
-    PA1     ------> ADC1_IN1
-    */
+        /**
+         * ADC1 GPIO Configuration
+         * PA0-WKUP------> ADC1_IN0
+         * PA1     ------> ADC1_IN1
+         */
         GPIO_InitStruct.Pin = SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_Pin |
                               SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_Pin;
         GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
@@ -164,10 +175,11 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef *adcHandle) {
         /* Peripheral clock disable */
         __HAL_RCC_ADC1_CLK_DISABLE();
 
-        /**ADC1 GPIO Configuration
-    PA0-WKUP     ------> ADC1_IN0
-    PA1     ------> ADC1_IN1
-    */
+        /**
+         * ADC1 GPIO Configuration
+         * PA0-WKUP------> ADC1_IN0
+         * PA1     ------> ADC1_IN1
+         */
         HAL_GPIO_DeInit(GPIOA,
                         SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_Pin | SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_Pin);
 
@@ -225,7 +237,7 @@ static uint32_t _ADC_sample_filtering(uint32_t new_sample, uint32_t prev_filtere
     * alpha = sampling_period / (RC + sampling_period)
     *       = 1ms/(100ms+1ms) = 1/101 = 0.00999 ~ 1*10E-2
     */
-#define IIR_ALPHA (0.01f)
+#define IIR_ALPHA (0.1) //(0.01)
     return _ADC_IIR_first_order(IIR_ALPHA, new_sample, prev_filtered_sample);
 }
 
@@ -237,7 +249,8 @@ static uint32_t _ADC_sample_filtering(uint32_t new_sample, uint32_t prev_filtere
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
     for (int i = 0; i < hadc1.Init.NbrOfConversion; ++i) {
-        adc_raw_data_filtered[i] = _ADC_sample_filtering(adc_raw_data[i], adc_raw_data_filtered[i]);
+        //adc_raw_data_filtered[i] = _ADC_sample_filtering(adc_raw_data[i], adc_raw_data_filtered[i]);
+        adc_raw_data_filtered[i] = (uint32_t)adc_raw_data[i];
     }
 }
 
