@@ -20,9 +20,9 @@ struct DB_SHTDWN_FB {
     uint8_t sd_mid_in_to_ams_err_rly;             /*!< shutdown line status from middle section input to AMS ERROR realy - OFF(0)/ON(!0) */
     uint8_t ams_err_rly_to_imd_err_rly;           /*!< shutdown line status from AMS ERROR relay to IMD ERROR relay - OFF(0)/ON(!0) */
     uint8_t imd_err_rly_to_sd_prch_rly;           /*!< shutdown line status from IMD ERROR relay to shutdown precharge relay - OFF(0)/ON(!0) */
-    double  sd_prch_rly_to_sd_mid_out_mV;         /*!< shutdown line status from shutdown precharge realy to middle section otput - milliVolts*/
+    double  sd_prch_rly_to_sd_mid_out_V;          /*!< shutdown line status from shutdown precharge realy to middle section otput - Volts*/
     uint8_t sd_fnl_in_to_sd_dly_caps;             /*!< shutdown line status from shutdown final section input to shutdown delay caps - OFF(0)/ON(!0) */
-    double  sd_dly_caps_to_sd_fin_out_airs_mV;    /*!< shutdown line status from shutdown delay capacitors to shutdown final section output AIRs - milliVolts */
+    double  sd_dly_caps_to_sd_fin_out_airs_V;     /*!< shutdown line status from shutdown delay capacitors to shutdown final section output AIRs - Volts */
     uint32_t sample_tick;                         /*!< sample tick */
     char const * const csv_header_string;         /*!< CSV header string representation of struct */
 };
@@ -32,9 +32,9 @@ struct DB_TLB_SIG_FB {
     uint8_t imd_err;     /*!< TLB signal feedback: IMD error control signal - OFF(0)/ON(!0) - (ON == ERROR) */
     uint8_t sd_prch_rly; /*!< TLB signal feedback: shutdown precharge relay control signal - OFF(0)/ON(!0) */
 
-    uint8_t shrt2gnd_air_neg; /*!< TLB signal feedback: short to ground of both AIRs - OFF(0)/ON(!0) - (ON == ERROR) */
+    uint8_t shrt2gnd_air_neg; /*!< TLB signal feedback: short to ground of AIR negative - OFF(0)/ON(!0) - (ON == ERROR) */
     uint8_t shrt2gnd_air_pos; /*!< TLB signal feedback: short to ground of AIR positive - OFF(0)/ON(!0) - (ON == ERROR) */
-    uint8_t shrt2gnd_airs;    /*!< TLB signal feedback: short to ground of AIR negative - OFF(0)/ON(!0) - (ON == ERROR) */
+    uint8_t shrt2gnd_airs;    /*!< TLB signal feedback: short to ground of an AIR (either positive or negative) - OFF(0)/ON(!0) - (ON == ERROR) */
 
     uint8_t dcbus_over_60v; /*!< TLB signal feedback: high voltage DC bus (post AIR+) over 60V - OFF(0)/ON(!0) - (ON == ACTIVE) */
 

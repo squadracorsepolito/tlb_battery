@@ -25,7 +25,7 @@
 
 struct DB_SHTDWN_FB DB_shtdwn_fb = {
     .csv_header_string = "sd_mid_in_to_ams_err_rly,ams_err_rly_to_imd_err_rly,imd_err_rly_to_sd_prch_rly,"
-                         "sd_prch_rly_to_sd_mid_out_mV,sd_fnl_in_to_sd_dly_caps,sd_dly_caps_to_sd_fin_out_airs_mV,"
+                         "sd_prch_rly_to_sd_mid_out_V,sd_fnl_in_to_sd_dly_caps,sd_dly_caps_to_sd_fin_out_airs_V,"
                          "sample_tick"};
 
 struct DB_TLB_SIG_FB DB_tlb_sig_fb = {.csv_header_string =
@@ -49,9 +49,9 @@ void DB_SHTDWN_FB_ToStringCSV(struct DB_SHTDWN_FB *DB_shtdwn_fb, char buf[static
             DB_shtdwn_fb->sd_mid_in_to_ams_err_rly,
             DB_shtdwn_fb->ams_err_rly_to_imd_err_rly,
             DB_shtdwn_fb->imd_err_rly_to_sd_prch_rly,
-            DB_shtdwn_fb->sd_prch_rly_to_sd_mid_out_mV,
+            DB_shtdwn_fb->sd_prch_rly_to_sd_mid_out_V,
             DB_shtdwn_fb->sd_fnl_in_to_sd_dly_caps,
-            DB_shtdwn_fb->sd_dly_caps_to_sd_fin_out_airs_mV,
+            DB_shtdwn_fb->sd_dly_caps_to_sd_fin_out_airs_V,
             DB_shtdwn_fb->sample_tick);
 };
 

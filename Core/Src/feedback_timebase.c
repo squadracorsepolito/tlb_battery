@@ -77,10 +77,10 @@ STMLIBS_StatusTypeDef _sample_shutdown_fb(void) {
     DB_shtdwn_fb.sd_mid_in_to_ams_err_rly   = __GPIO_READPIN_DECIMAL(SD_FB_SD_MID_IN_TO_AMS_ERR_RLY_GPIO_IN);
     DB_shtdwn_fb.ams_err_rly_to_imd_err_rly = __GPIO_READPIN_DECIMAL(SD_FB_AMS_ERR_RLY_TO_IMD_ERR_RLY_GPIO_IN);
     DB_shtdwn_fb.imd_err_rly_to_sd_prch_rly = __GPIO_READPIN_DECIMAL(SD_FB_IMD_ERR_RLY_TO_SD_PRCH_RLY_GPIO_IN);
-    DB_shtdwn_fb.sd_prch_rly_to_sd_mid_out_mV =
+    DB_shtdwn_fb.sd_prch_rly_to_sd_mid_out_V =
         ADC_Get_Filtered_Real(&SD_FB_ADC_Handle, SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_ADC_CHNL);
     DB_shtdwn_fb.sd_fnl_in_to_sd_dly_caps = __GPIO_READPIN_DECIMAL(SD_FB_SD_FNL_IN_TO_SD_DLY_CAPS_GPIO_IN);
-    DB_shtdwn_fb.sd_dly_caps_to_sd_fin_out_airs_mV =
+    DB_shtdwn_fb.sd_dly_caps_to_sd_fin_out_airs_V =
         ADC_Get_Filtered_Real(&SD_FB_ADC_Handle, SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_ADC_CHNL);
     DB_shtdwn_fb.sample_tick = HAL_GetTick();
     return STMLIBS_OK;
@@ -130,5 +130,44 @@ STMLIBS_StatusTypeDef _sample_fb(void) {
     ret                       = _sample_shutdown_fb();
     // TODO implement some sort of error checking and logging
     ret = _sample_tlb_signals_fb();
+
+    #if 0
+    DB_shtdwn_fb.sd_mid_in_to_ams_err_rly   =255U;
+    DB_shtdwn_fb.ams_err_rly_to_imd_err_rly =255U;
+    DB_shtdwn_fb.imd_err_rly_to_sd_prch_rly =255U;
+    DB_shtdwn_fb.sd_prch_rly_to_sd_mid_out_V =12.0;
+    DB_shtdwn_fb.sd_fnl_in_to_sd_dly_caps =255U;
+    DB_shtdwn_fb.sd_dly_caps_to_sd_fin_out_airs_V =5.0;
+    DB_shtdwn_fb.sample_tick =255U;
+
+    DB_tlb_sig_fb.ams_err     = 255U;
+    DB_tlb_sig_fb.imd_err     = 255U;
+    DB_tlb_sig_fb.sd_prch_rly = 255U;
+
+    DB_tlb_sig_fb.shrt2gnd_air_neg = 0U;
+    DB_tlb_sig_fb.shrt2gnd_air_pos = 255U;
+    DB_tlb_sig_fb.shrt2gnd_airs    = 0U;
+
+    DB_tlb_sig_fb.dcbus_over_60v = 255U;
+    DB_tlb_sig_fb.air_neg_int_sd_rel        = 0U;
+    DB_tlb_sig_fb.air_pos_int_sd_rel        = 255U;
+
+    DB_tlb_sig_fb.dcbus_prch_rly_int_sd_rel = 0U;
+
+    DB_tlb_sig_fb.air_neg_aux        = 0U;
+    DB_tlb_sig_fb.air_pos_aux        = 255U;
+    DB_tlb_sig_fb.dcbus_prch_rly_aux = 255U;
+
+    DB_tlb_sig_fb.air_neg_impl_err        = 0U;
+    DB_tlb_sig_fb.air_pos_impl_err        = 255U;
+    DB_tlb_sig_fb.dcbus_prch_rly_impl_err = 0U;
+
+    DB_tlb_sig_fb.dcbus_over_60v_impl_err = 255U;
+
+    DB_tlb_sig_fb.any_impl_err      = 0U;
+    DB_tlb_sig_fb.any_impl_err_ltch = 255U;
+
+    DB_tlb_sig_fb.tsal_green = 0U;
+    #endif 
     return ret;
 }

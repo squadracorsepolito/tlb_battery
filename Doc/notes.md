@@ -75,3 +75,9 @@ That in words is described as:
 ## Additional Schematics Changes
 - IN1, OUT1 -> MID_IN, MID_OUT
 - IN2,OUT2 -> FNL_IN, FNL_OUT
+
+## TSAL GREEN
+TSAL_GREEN
+- AIR_POS_Closed_N & AIR_NEG_Closed_N & PREC_Closed_N & SCS_ERROR_N & HV_Signal_N & LATCH_IMP_N
+= !AIR_POS_AUX & !AIR_NEG_AUX & nDCBUS_PRCH_RLY_AUX & nSHRT2GND_AIRS & DCBUS_OVER_60V & ANY_IMP_ERR_LTCH
+

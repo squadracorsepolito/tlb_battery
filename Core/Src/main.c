@@ -108,12 +108,20 @@ int main(void) {
     MX_USART2_UART_Init();
     /* USER CODE BEGIN 2 */
     FBTMBS_init();
+    HAL_CAN_Start(&hcan1);
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-    char log_buf[400]  = {0};  // init logging buffer
+    char log_buf[400]           = {0};  // init logging buffer
+    volatile uint32_t cnt_200ms = HAL_GetTick() + 200U;
     volatile uint32_t cnt_100ms = HAL_GetTick() + 100U;
+    volatile uint32_t cnt_10ms  = HAL_GetTick() + 10U;
+
+    //memset((void *)&(tlb_batt_sig_fb_can_msg.data),0,8);
+    //memset((void *)&(tlb_batt_shtdwn_fb_can_msg.data),0,8);
+    memset(&(tlb_batt_sig_fb_can_msg.data), 0, 8);
+    memset(&(tlb_batt_shtdwn_fb_can_msg.data), 0, 8);
 
     // Send CSV header to VCP if enabled
     sprintf(log_buf, "%s,", DB_shtdwn_fb.csv_header_string);
@@ -127,16 +135,66 @@ int main(void) {
         /* USER CODE BEGIN 3 */
         // Execute the feedback timebase routines runner
         //FBTMBS_routines_runner();
+        if (HAL_GetTick() >= cnt_10ms) {
+            cnt_10ms = HAL_GetTick() + 10U;
+        }
 
         if (HAL_GetTick() >= cnt_100ms) {
             cnt_100ms = HAL_GetTick() + 100U;
+
             _sample_fb();
+
+            CAN_update_tlb_batt_shtdwn_fb(&DB_shtdwn_fb, &(tlb_batt_shtdwn_fb_can_msg.tlb_batt_shtdwn_fb));
+
+            CAN_update_tlb_batt_sig_fb(&DB_tlb_sig_fb, &(tlb_batt_sig_fb_can_msg.tlb_batt_sig_fb));
+
+            // Print to uart
+            #if 0
+            sprintf(log_buf,
+                    "[%x %x %x %x | %x %x %x %x ]",
+                    tlb_batt_shtdwn_fb_can_msg.data[0],
+                    tlb_batt_shtdwn_fb_can_msg.data[1],
+                    tlb_batt_shtdwn_fb_can_msg.data[2],
+                    tlb_batt_shtdwn_fb_can_msg.data[3],
+                    tlb_batt_shtdwn_fb_can_msg.data[4],
+                    tlb_batt_shtdwn_fb_can_msg.data[5],
+                    tlb_batt_shtdwn_fb_can_msg.data[6],
+                    tlb_batt_shtdwn_fb_can_msg.data[7]);
+            HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
+            #endif
             DB_SHTDWN_FB_ToStringCSV(&DB_shtdwn_fb, log_buf);
             strcat(log_buf, ",");
             HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
             DB_TLB_SIG_FB_ToStringCSV(&DB_tlb_sig_fb, log_buf);
             strcat(log_buf, ";\n\r");
             HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
+
+            // Send via can
+            if (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0) {
+                CAN_TxHeaderTypeDef can_header;
+                can_header.StdId              = 0x07;
+                can_header.ExtId              = 0x50;
+                can_header.IDE                = CAN_ID_STD;
+                can_header.RTR                = CAN_RTR_DATA;
+                can_header.DLC                = 3; //sizeof(struct CAN_tlb_batt_shtdwn_fb);
+                can_header.TransmitGlobalTime = DISABLE;
+                uint32_t used_mailbox;
+                uint8_t can_data[8] = {0};
+                CAN_serialize_tlb_batt_shtdwn_fb(&(tlb_batt_shtdwn_fb_can_msg.tlb_batt_shtdwn_fb),can_data);
+                HAL_CAN_AddTxMessage(&hcan1, &can_header, can_data, &used_mailbox);
+
+                can_header.StdId = 0x08;
+                can_header.DLC   = sizeof(struct CAN_tlb_batt_sig_fb);
+                CAN_serialize_tlb_batt_sig_fb(&(tlb_batt_sig_fb_can_msg.tlb_batt_sig_fb),can_data);
+                HAL_CAN_AddTxMessage(&hcan1, &can_header, can_data, &used_mailbox);
+            } else {
+                HAL_UART_Transmit(
+                    &VCP_UART_Handle, (uint8_t *)"problem", strlen("problem"), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
+            }
+        }
+
+        if (HAL_GetTick() >= cnt_200ms) {
+            cnt_200ms = HAL_GetTick() + 200U;
         }
     }
     /* USER CODE END 3 */
