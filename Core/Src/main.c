@@ -124,10 +124,10 @@ int main(void) {
     memset(&(tlb_batt_shtdwn_fb_can_msg.data), 0, 8);
 
     // Send CSV header to VCP if enabled
-    sprintf(log_buf, "%s,", DB_shtdwn_fb.csv_header_string);
-    HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
-    sprintf(log_buf, "%s;\n\r", DB_tlb_sig_fb.csv_header_string);
-    HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
+    //sprintf(log_buf, "%s,", DB_shtdwn_fb.csv_header_string);
+    //HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
+    //sprintf(log_buf, "%s;\n\r", DB_tlb_sig_fb.csv_header_string);
+    //HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
 
     while (1) {
         /* USER CODE END WHILE */
@@ -149,19 +149,6 @@ int main(void) {
             CAN_update_tlb_batt_sig_fb(&DB_tlb_sig_fb, &(tlb_batt_sig_fb_can_msg.tlb_batt_sig_fb));
 
             // Print to uart
-            #if 0
-            sprintf(log_buf,
-                    "[%x %x %x %x | %x %x %x %x ]",
-                    tlb_batt_shtdwn_fb_can_msg.data[0],
-                    tlb_batt_shtdwn_fb_can_msg.data[1],
-                    tlb_batt_shtdwn_fb_can_msg.data[2],
-                    tlb_batt_shtdwn_fb_can_msg.data[3],
-                    tlb_batt_shtdwn_fb_can_msg.data[4],
-                    tlb_batt_shtdwn_fb_can_msg.data[5],
-                    tlb_batt_shtdwn_fb_can_msg.data[6],
-                    tlb_batt_shtdwn_fb_can_msg.data[7]);
-            HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
-            #endif
             DB_SHTDWN_FB_ToStringCSV(&DB_shtdwn_fb, log_buf);
             strcat(log_buf, ",");
             HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);

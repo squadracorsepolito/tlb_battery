@@ -78,17 +78,17 @@ STMLIBS_StatusTypeDef _sample_shutdown_fb(void) {
     DB_shtdwn_fb.ams_err_rly_to_imd_err_rly = __GPIO_READPIN_DECIMAL(SD_FB_AMS_ERR_RLY_TO_IMD_ERR_RLY_GPIO_IN);
     DB_shtdwn_fb.imd_err_rly_to_sd_prch_rly = __GPIO_READPIN_DECIMAL(SD_FB_IMD_ERR_RLY_TO_SD_PRCH_RLY_GPIO_IN);
     DB_shtdwn_fb.sd_prch_rly_to_sd_mid_out_V =
-        ADC_Get_Filtered_Real(&SD_FB_ADC_Handle, SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_ADC_CHNL);
+        ADC_Get_Filtered_Real(&SD_FB_ADC_Handle, SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_ADC_CHNL)/1000.0;
     DB_shtdwn_fb.sd_fnl_in_to_sd_dly_caps = __GPIO_READPIN_DECIMAL(SD_FB_SD_FNL_IN_TO_SD_DLY_CAPS_GPIO_IN);
     DB_shtdwn_fb.sd_dly_caps_to_sd_fin_out_airs_V =
-        ADC_Get_Filtered_Real(&SD_FB_ADC_Handle, SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_ADC_CHNL);
+        ADC_Get_Filtered_Real(&SD_FB_ADC_Handle, SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_ADC_CHNL)/1000.0;
     DB_shtdwn_fb.sample_tick = HAL_GetTick();
     return STMLIBS_OK;
 }
 
 STMLIBS_StatusTypeDef _sample_tlb_signals_fb(void) {
-    DB_tlb_sig_fb.ams_err     = ~__GPIO_READPIN_DECIMAL(FB_nAMS_ERR_GPIO_IN);
-    DB_tlb_sig_fb.imd_err     = ~__GPIO_READPIN_DECIMAL(FB_nIMD_ERR_GPIO_IN);
+    DB_tlb_sig_fb.ams_err     = __GPIO_READPIN_DECIMAL(FB_nAMS_ERR_GPIO_IN);
+    DB_tlb_sig_fb.imd_err     = __GPIO_READPIN_DECIMAL(FB_nIMD_ERR_GPIO_IN);
     DB_tlb_sig_fb.sd_prch_rly = __GPIO_READPIN_DECIMAL(FB_SD_PRCH_RLY_GPIO_IN);
 
     DB_tlb_sig_fb.shrt2gnd_air_neg = __GPIO_READPIN_DECIMAL(FB_SHRT2GND_AIR_NEG_GPIO_IN);

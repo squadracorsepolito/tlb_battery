@@ -136,7 +136,7 @@ void Error_Handler(void);
 #define SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_ADC_CHNL ADC_CHANNEL_0
 #define SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_ADC_CHNL      ADC_CHANNEL_1
 #define SD_FB_ADC_OFFSET                                      (0.0)//(367.0)
-#define SD_FB_ADC_GAIN                                        (1.0)//(7.272727)
+#define SD_FB_ADC_GAIN                                        (7.272727)
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

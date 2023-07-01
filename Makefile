@@ -60,7 +60,7 @@ $(BUILD_DIR)/$(PROJECT_NAME).bin: build
 
 # Flashing can happen only if the compile output is built
 flash: $(BUILD_DIR)/$(PROJECT_NAME).elf
-	"/run/current-system/sw/bin/openocd" -f ./openocd.cfg -c "program $(BUILD_DIR)/$(PROJECT_NAME).elf verify reset exit"
+	openocd -f ./openocd.cfg -c "program $(BUILD_DIR)/$(PROJECT_NAME).elf verify reset exit"
 
 #######################################
 # debug

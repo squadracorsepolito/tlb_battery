@@ -111,44 +111,45 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef *canHandle) {
 
 /* USER CODE BEGIN 1 */
 #define FLOAT_PNT_TO_FIXED_PNT(FLOAT_PNT_VAL, FSR_DOMAIN_FLOAT_PNT_VALUE, FSR_FIXED_PNT) \
-    (FLOAT_PNT_VAL / (double)FSR_DOMAIN_FLOAT_PNT_VALUE * (FSR_FIXED_PNT))
+    (FSR_FIXED_PNT / (double)FSR_DOMAIN_FLOAT_PNT_VALUE * FLOAT_PNT_VAL)
 
 void CAN_serialize_tlb_batt_shtdwn_fb(struct CAN_tlb_batt_shtdwn_fb *tlb_batt_shtdwn_fb_can_msg, uint8_t data[8]) {
     uint64_t data64 = 0;
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_mid_in_to_ams_err_rly) << (64U - 1U);
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->ams_err_rly_to_imd_err_rly) << (64U - 2U);
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->imd_err_rly_to_sd_prch_rly) << (64U - 3U);
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_prch_rly_to_sd_mid_out_V) << (64U - 11U);
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_fnl_in_to_sd_dly_caps) << (64U - 12U);
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_dly_caps_to_sd_fin_out_airs_V) << (64U - 20U);
+    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_mid_in_to_ams_err_rly) ;
+    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->ams_err_rly_to_imd_err_rly) << 1U;
+    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->imd_err_rly_to_sd_prch_rly) << 2U;
+    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_fnl_in_to_sd_dly_caps) <<  3U;
+    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_prch_rly_to_sd_mid_out_V) << 8;
+    //data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_fnl_in_to_sd_dly_caps) <<  11U;
+    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_dly_caps_to_sd_fin_out_airs_V) << 16U;
     for (int i = 0; i < 8; i++) {
-        data[i] = (uint8_t)((data64 >> (64U - ((i + 1) * 8))) & 0xFFU);
+        data[i] = (uint8_t)((data64 >> (i * 8)) & 0xFFU);
     }
 }
 void CAN_serialize_tlb_batt_sig_fb(struct CAN_tlb_batt_sig_fb *tlb_batt_sig_fb_can_msg, uint8_t data[8]) {
     uint64_t data64 = 0;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->ams_err) << (64U - 1U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->imd_err) << (64U - 2U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->sd_prch_rly) << (64U - 3U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->shrt2gnd_air_neg) << (64U - 4U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->shrt2gnd_air_pos) << (64U - 5U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->shrt2gnd_airs) << (64U - 6U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_over_60v) << (64U - 7U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_neg_int_sd_rel) << (64U - 8U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_pos_int_sd_rel) << (64U - 9U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_prch_rly_int_sd_rel) << (64U - 10U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_neg_aux) << (64U - 11U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_pos_aux) << (64U - 12U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_prch_rly_aux) << (64U - 13U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_neg_impl_err) << (64U - 14U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_pos_impl_err) << (64U - 15U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_prch_rly_impl_err) << (64U - 16U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_over_60v_impl_err) << (64U - 17U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->any_impl_err) << (64U - 18U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->any_impl_err_ltch) << (64U - 19U);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->tsal_green) << (64U - 20U);
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->ams_err);
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->imd_err) << 1U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->sd_prch_rly) << 2U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->shrt2gnd_air_neg) << 3U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->shrt2gnd_air_pos) << 4U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->shrt2gnd_airs) << 5U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_over_60v) << 6U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_neg_int_sd_rel) << 7U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_pos_int_sd_rel) << 8U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_prch_rly_int_sd_rel) << 9U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_neg_aux) << 10U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_pos_aux) << 11U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_prch_rly_aux) << 12U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_neg_impl_err) << 13U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_pos_impl_err) << 14U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_prch_rly_impl_err) <<  15U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_over_60v_impl_err) << 16U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->any_impl_err) <<  17U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->any_impl_err_ltch) << 18U;
+    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->tsal_green) <<  19U;
     for (int i = 0; i < 8; i++) {
-        data[i] = (uint8_t)((data64 >> (64U - ((i + 1) * 8))) & 0xFFU);
+        data[i] = (uint8_t)((data64 >> (i * 8)) & 0xFFU);
     }
 }
 
