@@ -16,18 +16,14 @@
 
 /* Exported types ------------------------------------------------------------*/
 // clang-format off
-struct DB_SHTDWN_FB {
+struct DB_data_t {
     uint8_t sd_mid_in_to_ams_err_rly;             /*!< shutdown line status from middle section input to AMS ERROR realy - OFF(0)/ON(!0) */
     uint8_t ams_err_rly_to_imd_err_rly;           /*!< shutdown line status from AMS ERROR relay to IMD ERROR relay - OFF(0)/ON(!0) */
     uint8_t imd_err_rly_to_sd_prch_rly;           /*!< shutdown line status from IMD ERROR relay to shutdown precharge relay - OFF(0)/ON(!0) */
     double  sd_prch_rly_to_sd_mid_out_V;          /*!< shutdown line status from shutdown precharge realy to middle section otput - Volts*/
     uint8_t sd_fnl_in_to_sd_dly_caps;             /*!< shutdown line status from shutdown final section input to shutdown delay caps - OFF(0)/ON(!0) */
     double  sd_dly_caps_to_sd_fin_out_airs_V;     /*!< shutdown line status from shutdown delay capacitors to shutdown final section output AIRs - Volts */
-    uint32_t sample_tick;                         /*!< sample tick */
-    char const * const csv_header_string;         /*!< CSV header string representation of struct */
-};
 
-struct DB_TLB_SIG_FB {
     uint8_t ams_err;     /*!< TLB signal feedback: AMS error control signal - OFF(0)/ON(!0) - (ON == ERROR) */
     uint8_t imd_err;     /*!< TLB signal feedback: IMD error control signal - OFF(0)/ON(!0) - (ON == ERROR) */
     uint8_t sd_prch_rly; /*!< TLB signal feedback: shutdown precharge relay control signal - OFF(0)/ON(!0) */
@@ -57,8 +53,8 @@ struct DB_TLB_SIG_FB {
 
     uint8_t tsal_green;   /*!< TLB signal feedback: Tractive System Active Light green status - OFF(0)/ON(!0) - (ON == ACTIVE)*/
 
-    uint32_t sample_tick;                   /*!< sample tick */
-    char const * const csv_header_string;   /*!< CSV header string representation of struct */
+    char const * const shtdwn_status_fb_csv_head_str;   /*!< CSV header string representation of struct */
+    char const * const tlb_intrnl_sig_fb_csv_head_str;   /*!< CSV header string representation of struct */
 };
 // clang-format on
 
@@ -67,28 +63,36 @@ struct DB_TLB_SIG_FB {
 /* Exported variables --------------------------------------------------------*/
 
 /**
-* @brief database structure containing shutdown feedback signals @ref struct DB_SHTDWN_FB
+* @brief database structure data @ref DB_data_t
 */
-extern struct DB_SHTDWN_FB DB_shtdwn_fb;
-extern struct DB_TLB_SIG_FB DB_tlb_sig_fb;
+extern struct DB_data_t DB_data;
 
 /* Exported macros -----------------------------------------------------------*/
+
+/**
+ * @brief Generic function DB_ToString, will call the correct one defined below
+ * depending on the first argument type
+ */
+#define DB_ToStringCSV(_db_struct_data, ...) _Generic((_db_struct_data), \
+              struct DB_shtdwn_status_fb *  : _DB_shtdwn_status_fb_ToStringCSV, \
+              struct DB_tlb_intrnl_sig_fb * : _DB_tlb_intrnl_sig_fb_ToStringCSV \
+                                                                      )(_db_struct_data, __VA_ARGS__)
 
 /* Exported functions --------------------------------------------------------*/
 
 /**
- * @brief Convert a @ref DB_SHTDWN_FB struct to into a CSV string stored in buf
- * @param db_shtdwn_fb The struct of type @ struct DB_SHTDWN_FB that will be converted
+ * @brief Convert the shutdown status feedbacks of @ref DB_data into a CSV string stored in buf
+ * @param DB_data The database data object struct of type @ struct DB_data_t that will be converted
  * @param buf Buffer array of char of at least 256 items that will containt the header string
  */
-void DB_SHTDWN_FB_ToStringCSV(struct DB_SHTDWN_FB *DB_shtdwn_fb, char buf[static 256]);
+void DB_shtdwn_status_fb_ToStringCSV(struct DB_data_t* DB_data, char buf[static 256]);
 
 /**
- * @brief Convert a @ref DB_SHTDWN_FB struct to into a CSV string stored in buf
- * @param db_shtdwn_fb The struct of type @ struct DB_SHTDWN_FB that will be converted
+ * @brief Convert the Tlb interanal signals feedbacks of @ref DB_data into a CSV string stored in buf
+ * @param DB_data The database data object struct of type @ struct DB_data_t that will be converted
  * @param buf Buffer array of char of at least 256 items that will containt the output of conversion
  */
-void DB_TLB_SIG_FB_ToStringCSV(struct DB_TLB_SIG_FB *DB_tlb_sig_fb, char buf[static 256]);
+void DB_tlb_intrnl_sig_fb_ToStringCSV(struct DB_data_t* DB_data, char buf[static 256]);
 
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/

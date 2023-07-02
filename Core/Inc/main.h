@@ -57,8 +57,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define FB_nIMD_ERR_GPIO_IN_Pin GPIO_PIN_0
-#define FB_nIMD_ERR_GPIO_IN_GPIO_Port GPIOC
+#define FB_IMD_ERR_GPIO_IN_Pin GPIO_PIN_0
+#define FB_IMD_ERR_GPIO_IN_GPIO_Port GPIOC
 #define SD_FB_AMS_ERR_RLY_TO_IMD_ERR_RLY_GPIO_IN_Pin GPIO_PIN_1
 #define SD_FB_AMS_ERR_RLY_TO_IMD_ERR_RLY_GPIO_IN_GPIO_Port GPIOC
 #define SD_FB_SD_MID_IN_TO_AMS_ERR_RLY_GPIO_IN_Pin GPIO_PIN_3
@@ -71,8 +71,8 @@ void Error_Handler(void);
 #define T_VCP_TX_USART_TX_GPIO_Port GPIOA
 #define T_VCP_RX_USART_RX_Pin GPIO_PIN_3
 #define T_VCP_RX_USART_RX_GPIO_Port GPIOA
-#define FB_nAMS_ERR_GPIO_IN_Pin GPIO_PIN_4
-#define FB_nAMS_ERR_GPIO_IN_GPIO_Port GPIOA
+#define FB_AMS_ERR_GPIO_IN_Pin GPIO_PIN_4
+#define FB_AMS_ERR_GPIO_IN_GPIO_Port GPIOA
 #define FB_AIR_POS_INT_SD_REL_GPIO_IN_Pin GPIO_PIN_5
 #define FB_AIR_POS_INT_SD_REL_GPIO_IN_GPIO_Port GPIOA
 #define FB_AIR_NEG_INT_SD_REL_GPIO_IN_Pin GPIO_PIN_6
@@ -131,12 +131,18 @@ void Error_Handler(void);
 
 /* ADC Analog VDD in mV */
 #define ADC_VDDA_mV (3300.0)
-/*Shutdown Feedbacks constants and mappings */
+
+/* Shutdown Feedbacks constants and mappings */
 #define SD_FB_ADC_Handle                                      hadc1
 #define SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_ADC_CHNL ADC_CHANNEL_0
 #define SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_ADC_CHNL      ADC_CHANNEL_1
 #define SD_FB_ADC_OFFSET                                      (0.0)//(367.0)
 #define SD_FB_ADC_GAIN                                        (7.272727)
+
+/* CAN mappings */
+#define CAN_MCB_Handle hcan1
+#define CAN_MCB_TxAttemptsMailboxesFull (3U)
+#define CAN_MCB_AttemptRetryDelayMsMailboxesFull (1U)
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -1,0 +1,60 @@
+VERSION ""
+
+
+BS_:
+
+BU_:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+BO_ 7 TLB_Battery_TSALStatus: 3 Vector__XXX
+ SG_ SCS_isAnyShort2GND_Present : 10|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Imp_isDCBusVoltageImp_Present : 15|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Imp_isRelayPrechargeImp_Present : 14|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Imp_isAnyImp_Latched : 16|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Imp_isAIRNegImp_Present : 13|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Imp_isAIRPosImp_Present : 12|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Imp_isAnyImp_Present : 11|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ TSAL_isGreenON : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ TSAL_isDCBusOver60V : 4|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ SCS_Short2GND_AirNeg : 9|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ SCS_Short2GND_AirPos : 8|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ TSAL_IsRelayPrechargeClosed : 3|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ TSAL_IsAIRNegClosed : 2|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ TSAL_isAIRPosClosed : 1|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ IntentionalState_RelayPrecharge : 7|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ IntentionalState_AIRNeg : 6|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ IntentionalState_AIRPos : 5|1@1+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 6 TLB_Battery_ShutStatus: 3 Vector__XXX
+ SG_ isIMDErrorLatched : 5|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ isAMSErrorLatched : 4|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ ShutdownADC_AIRsOpeningDelayCaps : 16|8@1+ (0.117,0) [0|255] "V" Vector__XXX
+ SG_ isShutdownClosed_preTLBBattFinal : 3|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ ShutdownADC_postSDPrechargeRelay : 8|8@1+ (0.117,0) [0|255] "V" Vector__XXX
+ SG_ isShutClosed_postIMDLatch : 2|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ isShutClosed_postAMSLatch : 1|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ isShutClosed_preAMS_IMD_Latch : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+
+
+
+
+
+
+

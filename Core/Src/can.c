@@ -21,13 +21,13 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
+#include "mcb.h"
+
 #include <stdint.h>
+#include <stdio.h>
 
-//volatile struct CAN_tlb_batt_shtdwn_fb tlb_batt_shtdwn_fb_can_msg;
-//volatile struct CAN_tlb_batt_sig_fb tlb_batt_sig_fb_can_msg;
-
-union CAN_MsgUnion tlb_batt_shtdwn_fb_can_msg;
-union CAN_MsgUnion tlb_batt_sig_fb_can_msg;
+struct mcb_tlb_battery_tsal_status_t CAN_tlb_battery_tsal_status;
+struct mcb_tlb_battery_shut_status_t CAN_tlb_battery_shut_status;
 
 /* USER CODE END 0 */
 
@@ -110,83 +110,221 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef *canHandle) {
 }
 
 /* USER CODE BEGIN 1 */
-#define FLOAT_PNT_TO_FIXED_PNT(FLOAT_PNT_VAL, FSR_DOMAIN_FLOAT_PNT_VALUE, FSR_FIXED_PNT) \
-    (FSR_FIXED_PNT / (double)FSR_DOMAIN_FLOAT_PNT_VALUE * FLOAT_PNT_VAL)
 
-void CAN_serialize_tlb_batt_shtdwn_fb(struct CAN_tlb_batt_shtdwn_fb *tlb_batt_shtdwn_fb_can_msg, uint8_t data[8]) {
-    uint64_t data64 = 0;
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_mid_in_to_ams_err_rly) ;
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->ams_err_rly_to_imd_err_rly) << 1U;
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->imd_err_rly_to_sd_prch_rly) << 2U;
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_fnl_in_to_sd_dly_caps) <<  3U;
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_prch_rly_to_sd_mid_out_V) << 8;
-    //data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_fnl_in_to_sd_dly_caps) <<  11U;
-    data64 |= ((uint64_t)tlb_batt_shtdwn_fb_can_msg->sd_dly_caps_to_sd_fin_out_airs_V) << 16U;
-    for (int i = 0; i < 8; i++) {
-        data[i] = (uint8_t)((data64 >> (i * 8)) & 0xFFU);
+/**
+ * @brief Print the error message in the serial console and activate
+ *        the CAN error LED
+ * @param msg The message to send over UART
+ * */
+static void _CAN_error_handler(CAN_HandleTypeDef *hcan, char *msg) {
+    #define print_log(x,y) ((void)0U)
+    uint32_t err_code = HAL_CAN_GetError(hcan);
+
+    if ((err_code & HAL_CAN_ERROR_EWG) == HAL_CAN_ERROR_EWG)
+        print_log("Protocol error warning", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_EPV) == HAL_CAN_ERROR_EPV)
+        print_log("Error passive", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_BOF) == HAL_CAN_ERROR_BOF)
+        print_log("Bus-off error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_STF) == HAL_CAN_ERROR_STF)
+        print_log("Stuff error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_FOR) == HAL_CAN_ERROR_FOR)
+        print_log("Form error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_ACK) == HAL_CAN_ERROR_ACK)
+        print_log("ACK error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_BR) == HAL_CAN_ERROR_BR)
+        print_log("Bit Recessive error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_BD) == HAL_CAN_ERROR_BD)
+        print_log("Bit Dominant error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_CRC) == HAL_CAN_ERROR_CRC)
+        print_log("CRC error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_RX_FOV0) == HAL_CAN_ERROR_RX_FOV0)
+        print_log("FIFO 0 overrun error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_RX_FOV1) == HAL_CAN_ERROR_RX_FOV1)
+        print_log("FIFO 1 overrun error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_TX_ALST0) == HAL_CAN_ERROR_TX_ALST0)
+        print_log("TX 0 arbitration lost error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_TX_TERR0) == HAL_CAN_ERROR_TX_TERR0)
+        print_log("TX 0 transmit error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_TX_ALST1) == HAL_CAN_ERROR_TX_ALST1)
+        print_log("TX 1 arbitration lost error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_TX_TERR1) == HAL_CAN_ERROR_TX_TERR1)
+        print_log("TX 1 transmit error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_TX_ALST2) == HAL_CAN_ERROR_TX_ALST2)
+        print_log("TX 2 arbitration lost error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_TX_TERR2) == HAL_CAN_ERROR_TX_TERR2)
+        print_log("TX 2 transmit error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_TIMEOUT) == HAL_CAN_ERROR_TIMEOUT)
+        print_log("Timeout error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_NOT_INITIALIZED) == HAL_CAN_ERROR_NOT_INITIALIZED)
+        print_log("CAN bus not initialized", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_NOT_READY) == HAL_CAN_ERROR_NOT_READY)
+        print_log("CAN bus not ready", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_NOT_STARTED) == HAL_CAN_ERROR_NOT_STARTED)
+        print_log("CAN bus not started", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_PARAM) == HAL_CAN_ERROR_PARAM)
+        print_log("Parameter error", NO_HEADER);
+    if ((err_code & HAL_CAN_ERROR_INTERNAL) == HAL_CAN_ERROR_INTERNAL)
+        print_log("Internal error", NO_HEADER);
+
+    char buf[50];
+
+    uint16_t rec_val = (uint16_t)((hcan->Instance->ESR && CAN_ESR_REC_Msk) >> CAN_ESR_REC_Pos);
+    if (rec_val > 0) {
+        sprintf(buf, "REC (Receive Error Counter) %d", rec_val);
+        print_log(buf, NO_HEADER);
+    }
+
+    uint16_t tec_val = (uint16_t)((hcan->Instance->ESR && CAN_ESR_TEC_Msk) >> CAN_ESR_TEC_Pos);
+    if (tec_val > 0) {
+        sprintf(buf, "TEC (Transmit Error Counter) %d", tec_val);
+        print_log(buf, NO_HEADER);
     }
 }
-void CAN_serialize_tlb_batt_sig_fb(struct CAN_tlb_batt_sig_fb *tlb_batt_sig_fb_can_msg, uint8_t data[8]) {
-    uint64_t data64 = 0;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->ams_err);
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->imd_err) << 1U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->sd_prch_rly) << 2U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->shrt2gnd_air_neg) << 3U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->shrt2gnd_air_pos) << 4U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->shrt2gnd_airs) << 5U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_over_60v) << 6U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_neg_int_sd_rel) << 7U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_pos_int_sd_rel) << 8U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_prch_rly_int_sd_rel) << 9U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_neg_aux) << 10U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_pos_aux) << 11U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_prch_rly_aux) << 12U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_neg_impl_err) << 13U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->air_pos_impl_err) << 14U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_prch_rly_impl_err) <<  15U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->dcbus_over_60v_impl_err) << 16U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->any_impl_err) <<  17U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->any_impl_err_ltch) << 18U;
-    data64 |= ((uint64_t)tlb_batt_sig_fb_can_msg->tsal_green) <<  19U;
-    for (int i = 0; i < 8; i++) {
-        data[i] = (uint8_t)((data64 >> (i * 8)) & 0xFFU);
+
+void _CAN_tlb_battery_shut_status_msg_construct(struct DB_data_t *db_data,
+                                         struct mcb_tlb_battery_shut_status_t *can_data_msg) {
+    // clang-format off
+    assert_param(mcb_tlb_battery_shut_status_is_shut_closed_pre_ams_imd_latch_is_in_range(db_data->sd_mid_in_to_ams_err_rly & 0b1U));
+    assert_param(mcb_tlb_battery_shut_status_is_shut_closed_post_ams_latch_is_in_range(db_data->ams_err_rly_to_imd_err_rly & 0b1U));
+    assert_param(mcb_tlb_battery_shut_status_is_shut_closed_post_imd_latch_is_in_range(db_data->imd_err_rly_to_sd_prch_rly & 0b1U));
+    assert_param(mcb_tlb_battery_shut_status_is_shutdown_closed_pre_tlb_batt_final_is_in_range(db_data->sd_fnl_in_to_sd_dly_caps & 0b1U));
+    assert_param(mcb_tlb_battery_shut_status_is_ams_error_latched_is_in_range(db_data->ams_err & 0b1U));
+    assert_param(mcb_tlb_battery_shut_status_is_imd_error_latched_is_in_range(db_data->imd_err & 0b1U));
+    assert_param(mcb_tlb_battery_shut_status_shutdown_adc_post_sd_precharge_relay_is_in_range(db_data->sd_prch_rly_to_sd_mid_out_V));
+    assert_param(mcb_tlb_battery_shut_status_shutdown_adc_ai_rs_opening_delay_caps_is_in_range(db_data->sd_dly_caps_to_sd_fin_out_airs_V));
+
+    can_data_msg->is_shut_closed_pre_ams_imd_latch      = mcb_tlb_battery_shut_status_is_shut_closed_pre_ams_imd_latch_encode(db_data->sd_mid_in_to_ams_err_rly & 0b1U);
+    can_data_msg->is_shut_closed_post_ams_latch         = mcb_tlb_battery_shut_status_is_shut_closed_post_ams_latch_encode(db_data->ams_err_rly_to_imd_err_rly & 0b1U);
+    can_data_msg->is_shut_closed_post_imd_latch         = mcb_tlb_battery_shut_status_is_shut_closed_post_imd_latch_encode(db_data->imd_err_rly_to_sd_prch_rly & 0b1U);
+    can_data_msg->is_shutdown_closed_pre_tlb_batt_final = mcb_tlb_battery_shut_status_is_shutdown_closed_pre_tlb_batt_final_encode(db_data->sd_fnl_in_to_sd_dly_caps & 0b1U);
+    can_data_msg->is_ams_error_latched                  = mcb_tlb_battery_shut_status_is_ams_error_latched_encode(db_data->ams_err & 0b1U);
+    can_data_msg->is_imd_error_latched                  = mcb_tlb_battery_shut_status_is_imd_error_latched_encode(db_data->imd_err & 0b1U);
+    can_data_msg->shutdown_adc_post_sd_precharge_relay  = mcb_tlb_battery_shut_status_shutdown_adc_post_sd_precharge_relay_encode(db_data->sd_prch_rly_to_sd_mid_out_V);
+    can_data_msg->shutdown_adc_ai_rs_opening_delay_caps = mcb_tlb_battery_shut_status_shutdown_adc_ai_rs_opening_delay_caps_encode(db_data->sd_dly_caps_to_sd_fin_out_airs_V);
+    // clang-format on
+}
+
+void _CAN_tlb_battery_tsal_status_msg_construct(struct DB_data_t *db_data,
+                                         struct mcb_tlb_battery_tsal_status_t *can_data_msg) {
+    // clang-format off
+    assert_param(mcb_tlb_battery_tsal_status_tsal_is_relay_precharge_closed_is_in_range(db_data->sd_prch_rly & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_tsal_is_green_on_is_in_range(db_data->shrt2gnd_air_neg & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_scs_short2_gnd_air_pos_is_in_range(db_data->shrt2gnd_air_pos & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_scs_is_any_short2_gnd_present_is_in_range(db_data->shrt2gnd_airs & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_tsal_is_dc_bus_over60_v_is_in_range(db_data->dcbus_over_60v & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_intentional_state_air_neg_is_in_range(db_data->air_neg_int_sd_rel & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_intentional_state_air_pos_is_in_range(db_data->air_pos_int_sd_rel & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_intentional_state_relay_precharge_is_in_range(db_data->dcbus_prch_rly_int_sd_rel & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_tsal_is_air_neg_closed_is_in_range(db_data->air_neg_aux & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_tsal_is_air_pos_closed_is_in_range(db_data->air_pos_aux & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_tsal_is_relay_precharge_closed_is_in_range(db_data->dcbus_prch_rly_aux & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_imp_is_air_neg_imp_present_is_in_range(db_data->air_neg_impl_err & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_imp_is_air_pos_imp_present_is_in_range(db_data->air_pos_impl_err & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_imp_is_relay_precharge_imp_present_is_in_range(db_data->dcbus_prch_rly_impl_err & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_imp_is_dc_bus_voltage_imp_present_is_in_range(db_data->dcbus_over_60v_impl_err & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_imp_is_any_imp_present_is_in_range(db_data->any_impl_err & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_imp_is_any_imp_latched_is_in_range(db_data->any_impl_err_ltch & 0b1U));
+    assert_param(mcb_tlb_battery_tsal_status_tsal_is_green_on_is_in_range(db_data->tsal_green & 0b1U));
+
+    can_data_msg->tsal_is_relay_precharge_closed     = mcb_tlb_battery_tsal_status_tsal_is_relay_precharge_closed_encode(db_data->sd_prch_rly & 0b1U);
+    can_data_msg->scs_short2_gnd_air_neg             = mcb_tlb_battery_tsal_status_tsal_is_green_on_encode(db_data->shrt2gnd_air_neg & 0b1U);
+    can_data_msg->scs_short2_gnd_air_pos             = mcb_tlb_battery_tsal_status_scs_short2_gnd_air_pos_encode(db_data->shrt2gnd_air_pos & 0b1U);
+    can_data_msg->scs_is_any_short2_gnd_present      = mcb_tlb_battery_tsal_status_scs_is_any_short2_gnd_present_encode(db_data->shrt2gnd_airs & 0b1U);
+    can_data_msg->tsal_is_dc_bus_over60_v            = mcb_tlb_battery_tsal_status_tsal_is_dc_bus_over60_v_encode(db_data->dcbus_over_60v & 0b1U);
+    can_data_msg->intentional_state_air_neg          = mcb_tlb_battery_tsal_status_intentional_state_air_neg_encode(db_data->air_neg_int_sd_rel & 0b1U);
+    can_data_msg->intentional_state_air_pos          = mcb_tlb_battery_tsal_status_intentional_state_air_pos_encode(db_data->air_pos_int_sd_rel & 0b1U);
+    can_data_msg->intentional_state_relay_precharge  = mcb_tlb_battery_tsal_status_intentional_state_relay_precharge_encode(db_data->dcbus_prch_rly_int_sd_rel & 0b1U);
+    can_data_msg->tsal_is_air_neg_closed             = mcb_tlb_battery_tsal_status_tsal_is_air_neg_closed_encode(db_data->air_neg_aux & 0b1U);
+    can_data_msg->tsal_is_air_pos_closed             = mcb_tlb_battery_tsal_status_tsal_is_air_pos_closed_encode(db_data->air_pos_aux & 0b1U);
+    can_data_msg->tsal_is_relay_precharge_closed     = mcb_tlb_battery_tsal_status_tsal_is_relay_precharge_closed_encode(db_data->dcbus_prch_rly_aux & 0b1U);
+    can_data_msg->imp_is_air_neg_imp_present         = mcb_tlb_battery_tsal_status_imp_is_air_neg_imp_present_encode(db_data->air_neg_impl_err & 0b1U);
+    can_data_msg->imp_is_air_pos_imp_present         = mcb_tlb_battery_tsal_status_imp_is_air_pos_imp_present_encode(db_data->air_pos_impl_err & 0b1U);
+    can_data_msg->imp_is_relay_precharge_imp_present = mcb_tlb_battery_tsal_status_imp_is_relay_precharge_imp_present_encode(db_data->dcbus_prch_rly_impl_err & 0b1U);
+    can_data_msg->imp_is_dc_bus_voltage_imp_present  = mcb_tlb_battery_tsal_status_imp_is_dc_bus_voltage_imp_present_encode(db_data->dcbus_over_60v_impl_err & 0b1U);
+    can_data_msg->imp_is_any_imp_present             = mcb_tlb_battery_tsal_status_imp_is_any_imp_present_encode(db_data->any_impl_err & 0b1U);
+    can_data_msg->imp_is_any_imp_latched             = mcb_tlb_battery_tsal_status_imp_is_any_imp_latched_encode(db_data->any_impl_err_ltch & 0b1U);
+    can_data_msg->tsal_is_green_on                   = mcb_tlb_battery_tsal_status_tsal_is_green_on_encode(db_data->tsal_green & 0b1U);
+    // clang-format on
+}
+/**
+ * @brief Send a CAN message given it's id on the MAIN CAN BUS
+ * @note This function will automatically gather all data for the specific message
+ * @param can_msg_id The id of the message to send
+ * @return - HAL_OK if everything went ok
+ *         - HAL_ERROR in case of errors either on the CAN peripheral or
+ *         internally in the function
+ */
+HAL_StatusTypeDef _CAN_MCB_SendMsg(uint16_t can_msg_id) {
+#define CAN_TX_PAYLOAD_ARRAY_SIZE (8U)
+    static uint8_t can_tx_payload[CAN_TX_PAYLOAD_ARRAY_SIZE] = {0};
+    static CAN_TxHeaderTypeDef can_tx_header = {.IDE = CAN_ID_STD, .RTR = CAN_RTR_DATA, .TransmitGlobalTime = DISABLE};
+
+    if (can_msg_id == MCB_TLB_BATTERY_TSAL_STATUS_FRAME_ID) {
+        can_tx_header.StdId = MCB_TLB_BATTERY_TSAL_STATUS_FRAME_ID;
+        can_tx_header.DLC   = MCB_TLB_BATTERY_TSAL_STATUS_LENGTH;
+        _CAN_tlb_battery_tsal_status_msg_construct(&DB_data,&CAN_tlb_battery_tsal_status);
+        mcb_tlb_battery_tsal_status_pack(can_tx_payload,
+                                         &CAN_tlb_battery_tsal_status,
+                                         //(const struct mcb_tlb_battery_tsal_status_t *)&CAN_tlb_battery_tsal_status,
+                                         CAN_TX_PAYLOAD_ARRAY_SIZE);
+    } else if (can_msg_id == MCB_TLB_BATTERY_SHUT_STATUS_FRAME_ID) {
+        can_tx_header.StdId = MCB_TLB_BATTERY_SHUT_STATUS_FRAME_ID;
+        can_tx_header.DLC   = MCB_TLB_BATTERY_SHUT_STATUS_LENGTH;
+        _CAN_tlb_battery_shut_status_msg_construct(&DB_data,&CAN_tlb_battery_shut_status);
+        mcb_tlb_battery_shut_status_pack(can_tx_payload, &CAN_tlb_battery_shut_status, CAN_TX_PAYLOAD_ARRAY_SIZE);
+    } else {
+        // Message id not found error out
+        // TODO: make assertions on can_msg_id so this event can't happen
+        return HAL_ERROR;
+    }
+
+    // Try sending the CAN Message
+
+#if 0
+    uint16_t send_but_full_mailboxes_cnt = 0U;
+    // While there are no free mailboxes, wait and retry or exit when maximum attempts are reached
+    while(HAL_CAN_GetTxMailboxesFreeLevel(&CAN_MCB_Handle) == 0){
+        if(send_but_full_mailboxes_cnt < CAN_MCB_TxAttemptsMailboxesFull){
+            // Abort all transmission requests and retry requests
+            HAL_CAN_AbortTxRequest (&CAN_MCB_Handle, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2);
+            break;
+        }
+        HAL_Delay(CAN_MCB_TxAttemptsMailboxesFull);
+
+        send_but_full_mailboxes_cnt++;
+    }
+    send_but_full_mailboxes_cnt = 0;
+#else
+    if (HAL_CAN_GetTxMailboxesFreeLevel(&CAN_MCB_Handle) == 0)
+        return HAL_ERROR;
+#endif
+
+    // Send message
+    uint32_t usedTxMailbox;
+    return HAL_CAN_AddTxMessage(&CAN_MCB_Handle, &can_tx_header, can_tx_payload, &usedTxMailbox);
+}
+
+void CAN_SendMsg(CAN_HandleTypeDef *hcan, uint16_t can_msg_id) {
+
+    assert_param(hcan);
+
+    HAL_StatusTypeDef ret_code;
+    
+    // Check that message is sent on the correct CAN bus line
+    if (hcan == &CAN_MCB_Handle) {
+        ret_code = _CAN_MCB_SendMsg(can_msg_id);
+    } // add below additional can modules
+
+    if (ret_code != HAL_OK) {
+        //_CAN_error_handler(hcan);
     }
 }
 
-void CAN_update_tlb_batt_shtdwn_fb(struct DB_SHTDWN_FB *db_shtdwn_fb,
-                                   struct CAN_tlb_batt_shtdwn_fb *tlb_batt_shtdwn_fb_can_msg) {
-    tlb_batt_shtdwn_fb_can_msg->sd_mid_in_to_ams_err_rly   = (db_shtdwn_fb->sd_mid_in_to_ams_err_rly & 0b1U);
-    tlb_batt_shtdwn_fb_can_msg->ams_err_rly_to_imd_err_rly = (db_shtdwn_fb->ams_err_rly_to_imd_err_rly & 0b1U);
-    tlb_batt_shtdwn_fb_can_msg->imd_err_rly_to_sd_prch_rly = (db_shtdwn_fb->imd_err_rly_to_sd_prch_rly & 0b1U);
-    tlb_batt_shtdwn_fb_can_msg->sd_prch_rly_to_sd_mid_out_V =
-        (uint8_t)FLOAT_PNT_TO_FIXED_PNT(db_shtdwn_fb->sd_prch_rly_to_sd_mid_out_V, 25.0, UINT8_MAX);
-    tlb_batt_shtdwn_fb_can_msg->sd_fnl_in_to_sd_dly_caps = (db_shtdwn_fb->sd_fnl_in_to_sd_dly_caps & 0b1U);
-    tlb_batt_shtdwn_fb_can_msg->sd_dly_caps_to_sd_fin_out_airs_V =
-        (uint8_t)FLOAT_PNT_TO_FIXED_PNT(db_shtdwn_fb->sd_dly_caps_to_sd_fin_out_airs_V, 25.0, UINT8_MAX);
+void CAN_Send100msMessages(void){
+    CAN_SendMsg(&CAN_MCB_Handle,MCB_TLB_BATTERY_TSAL_STATUS_FRAME_ID);
+    CAN_SendMsg(&CAN_MCB_Handle,MCB_TLB_BATTERY_SHUT_STATUS_FRAME_ID);
 }
 
-void CAN_update_tlb_batt_sig_fb(struct DB_TLB_SIG_FB *db_tlb_sig_fb,
-                                struct CAN_tlb_batt_sig_fb *tlb_batt_sig_fb_can_msg) {
-    tlb_batt_sig_fb_can_msg->ams_err                   = (db_tlb_sig_fb->ams_err & 0b1U);
-    tlb_batt_sig_fb_can_msg->imd_err                   = (db_tlb_sig_fb->imd_err & 0b1U);
-    tlb_batt_sig_fb_can_msg->sd_prch_rly               = (db_tlb_sig_fb->sd_prch_rly & 0b1U);
-    tlb_batt_sig_fb_can_msg->shrt2gnd_air_neg          = (db_tlb_sig_fb->shrt2gnd_air_neg & 0b1U);
-    tlb_batt_sig_fb_can_msg->shrt2gnd_air_pos          = (db_tlb_sig_fb->shrt2gnd_air_pos & 0b1U);
-    tlb_batt_sig_fb_can_msg->shrt2gnd_airs             = (db_tlb_sig_fb->shrt2gnd_airs & 0b1U);
-    tlb_batt_sig_fb_can_msg->dcbus_over_60v            = (db_tlb_sig_fb->dcbus_over_60v & 0b1U);
-    tlb_batt_sig_fb_can_msg->air_neg_int_sd_rel        = (db_tlb_sig_fb->air_neg_int_sd_rel & 0b1U);
-    tlb_batt_sig_fb_can_msg->air_pos_int_sd_rel        = (db_tlb_sig_fb->air_pos_int_sd_rel & 0b1U);
-    tlb_batt_sig_fb_can_msg->dcbus_prch_rly_int_sd_rel = (db_tlb_sig_fb->dcbus_prch_rly_int_sd_rel & 0b1U);
-    tlb_batt_sig_fb_can_msg->air_neg_aux               = (db_tlb_sig_fb->air_neg_aux & 0b1U);
-    tlb_batt_sig_fb_can_msg->air_pos_aux               = (db_tlb_sig_fb->air_pos_aux & 0b1U);
-    tlb_batt_sig_fb_can_msg->dcbus_prch_rly_aux        = (db_tlb_sig_fb->dcbus_prch_rly_aux & 0b1U);
-    tlb_batt_sig_fb_can_msg->air_neg_impl_err          = (db_tlb_sig_fb->air_neg_impl_err & 0b1U);
-    tlb_batt_sig_fb_can_msg->air_pos_impl_err          = (db_tlb_sig_fb->air_pos_impl_err & 0b1U);
-    tlb_batt_sig_fb_can_msg->dcbus_prch_rly_impl_err   = (db_tlb_sig_fb->dcbus_prch_rly_impl_err & 0b1U);
-    tlb_batt_sig_fb_can_msg->dcbus_over_60v_impl_err   = (db_tlb_sig_fb->dcbus_over_60v_impl_err & 0b1U);
-    tlb_batt_sig_fb_can_msg->any_impl_err              = (db_tlb_sig_fb->any_impl_err & 0b1U);
-    tlb_batt_sig_fb_can_msg->any_impl_err_ltch         = (db_tlb_sig_fb->any_impl_err_ltch & 0b1U);
-    tlb_batt_sig_fb_can_msg->tsal_green                = (db_tlb_sig_fb->tsal_green & 0b1U);
-}
 
 /* USER CODE END 1 */
