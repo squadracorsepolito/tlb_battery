@@ -128,6 +128,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 
 #define VCP_UART_Handle huart2 /*!< Virtual COMM Port UART handle */
+#define VCP_TX_LOG_BUF_MAX_TIMEOUT_MS (30U)  //~27ms are necessary to send 400 chars via UART@115kbit/s
 
 /* ADC Analog VDD in mV */
 #define ADC_VDDA_mV (3300.0)
@@ -136,7 +137,7 @@ void Error_Handler(void);
 #define SD_FB_ADC_Handle                                      hadc1
 #define SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_ADC_CHNL ADC_CHANNEL_0
 #define SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_ADC_CHNL      ADC_CHANNEL_1
-#define SD_FB_ADC_OFFSET                                      (0.0)//(367.0)
+#define SD_FB_ADC_OFFSET                                      (600.0)
 #define SD_FB_ADC_GAIN                                        (7.272727)
 
 /* CAN mappings */

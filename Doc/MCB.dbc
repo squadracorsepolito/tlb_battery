@@ -51,6 +51,8 @@ BO_ 6 TLB_Battery_ShutStatus: 3 Vector__XXX
  SG_ isShutClosed_postIMDLatch : 2|1@1+ (1,0) [0|1] "" Vector__XXX
  SG_ isShutClosed_postAMSLatch : 1|1@1+ (1,0) [0|1] "" Vector__XXX
  SG_ isShutClosed_preAMS_IMD_Latch : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ isSdPrchRlyClosed : 6|1@1+ (1,0) [0|1] "" Vector__XXX
+
 
 
 

@@ -25,6 +25,11 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
+#include "usart.h"
+#include "main.h"
+
+#define print_log(_STATIC_STR_,_NOT_USED) HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)_STATIC_STR_, strlen(_STATIC_STR_), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS)
 
 struct mcb_tlb_battery_tsal_status_t CAN_tlb_battery_tsal_status;
 struct mcb_tlb_battery_shut_status_t CAN_tlb_battery_shut_status;
@@ -114,10 +119,10 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef *canHandle) {
 /**
  * @brief Print the error message in the serial console and activate
  *        the CAN error LED
- * @param msg The message to send over UART
  * */
-static void _CAN_error_handler(CAN_HandleTypeDef *hcan, char *msg) {
-    #define print_log(x,y) ((void)0U)
+static void _CAN_error_handler(CAN_HandleTypeDef *hcan) {
+    //#define print_log(x,y) ((void)0U)
+
     uint32_t err_code = HAL_CAN_GetError(hcan);
 
     if ((err_code & HAL_CAN_ERROR_EWG) == HAL_CAN_ERROR_EWG)
@@ -180,6 +185,7 @@ static void _CAN_error_handler(CAN_HandleTypeDef *hcan, char *msg) {
         sprintf(buf, "TEC (Transmit Error Counter) %d", tec_val);
         print_log(buf, NO_HEADER);
     }
+    print_log("ERROR\r\n",NO_HEADER);
 }
 
 void _CAN_tlb_battery_shut_status_msg_construct(struct DB_data_t *db_data,
@@ -191,6 +197,7 @@ void _CAN_tlb_battery_shut_status_msg_construct(struct DB_data_t *db_data,
     assert_param(mcb_tlb_battery_shut_status_is_shutdown_closed_pre_tlb_batt_final_is_in_range(db_data->sd_fnl_in_to_sd_dly_caps & 0b1U));
     assert_param(mcb_tlb_battery_shut_status_is_ams_error_latched_is_in_range(db_data->ams_err & 0b1U));
     assert_param(mcb_tlb_battery_shut_status_is_imd_error_latched_is_in_range(db_data->imd_err & 0b1U));
+    assert_param(mcb_tlb_battery_shut_status_is_sd_prch_rly_closed_is_in_range(db_data->sd_prch_rly & 0b1U));
     assert_param(mcb_tlb_battery_shut_status_shutdown_adc_post_sd_precharge_relay_is_in_range(db_data->sd_prch_rly_to_sd_mid_out_V));
     assert_param(mcb_tlb_battery_shut_status_shutdown_adc_ai_rs_opening_delay_caps_is_in_range(db_data->sd_dly_caps_to_sd_fin_out_airs_V));
 
@@ -200,6 +207,7 @@ void _CAN_tlb_battery_shut_status_msg_construct(struct DB_data_t *db_data,
     can_data_msg->is_shutdown_closed_pre_tlb_batt_final = mcb_tlb_battery_shut_status_is_shutdown_closed_pre_tlb_batt_final_encode(db_data->sd_fnl_in_to_sd_dly_caps & 0b1U);
     can_data_msg->is_ams_error_latched                  = mcb_tlb_battery_shut_status_is_ams_error_latched_encode(db_data->ams_err & 0b1U);
     can_data_msg->is_imd_error_latched                  = mcb_tlb_battery_shut_status_is_imd_error_latched_encode(db_data->imd_err & 0b1U);
+    can_data_msg->is_sd_prch_rly_closed                 = mcb_tlb_battery_shut_status_is_sd_prch_rly_closed_encode(db_data->sd_prch_rly & 0b1U);
     can_data_msg->shutdown_adc_post_sd_precharge_relay  = mcb_tlb_battery_shut_status_shutdown_adc_post_sd_precharge_relay_encode(db_data->sd_prch_rly_to_sd_mid_out_V);
     can_data_msg->shutdown_adc_ai_rs_opening_delay_caps = mcb_tlb_battery_shut_status_shutdown_adc_ai_rs_opening_delay_caps_encode(db_data->sd_dly_caps_to_sd_fin_out_airs_V);
     // clang-format on
@@ -208,7 +216,6 @@ void _CAN_tlb_battery_shut_status_msg_construct(struct DB_data_t *db_data,
 void _CAN_tlb_battery_tsal_status_msg_construct(struct DB_data_t *db_data,
                                          struct mcb_tlb_battery_tsal_status_t *can_data_msg) {
     // clang-format off
-    assert_param(mcb_tlb_battery_tsal_status_tsal_is_relay_precharge_closed_is_in_range(db_data->sd_prch_rly & 0b1U));
     assert_param(mcb_tlb_battery_tsal_status_tsal_is_green_on_is_in_range(db_data->shrt2gnd_air_neg & 0b1U));
     assert_param(mcb_tlb_battery_tsal_status_scs_short2_gnd_air_pos_is_in_range(db_data->shrt2gnd_air_pos & 0b1U));
     assert_param(mcb_tlb_battery_tsal_status_scs_is_any_short2_gnd_present_is_in_range(db_data->shrt2gnd_airs & 0b1U));
@@ -227,7 +234,6 @@ void _CAN_tlb_battery_tsal_status_msg_construct(struct DB_data_t *db_data,
     assert_param(mcb_tlb_battery_tsal_status_imp_is_any_imp_latched_is_in_range(db_data->any_impl_err_ltch & 0b1U));
     assert_param(mcb_tlb_battery_tsal_status_tsal_is_green_on_is_in_range(db_data->tsal_green & 0b1U));
 
-    can_data_msg->tsal_is_relay_precharge_closed     = mcb_tlb_battery_tsal_status_tsal_is_relay_precharge_closed_encode(db_data->sd_prch_rly & 0b1U);
     can_data_msg->scs_short2_gnd_air_neg             = mcb_tlb_battery_tsal_status_tsal_is_green_on_encode(db_data->shrt2gnd_air_neg & 0b1U);
     can_data_msg->scs_short2_gnd_air_pos             = mcb_tlb_battery_tsal_status_scs_short2_gnd_air_pos_encode(db_data->shrt2gnd_air_pos & 0b1U);
     can_data_msg->scs_is_any_short2_gnd_present      = mcb_tlb_battery_tsal_status_scs_is_any_short2_gnd_present_encode(db_data->shrt2gnd_airs & 0b1U);
@@ -296,8 +302,10 @@ HAL_StatusTypeDef _CAN_MCB_SendMsg(uint16_t can_msg_id) {
     }
     send_but_full_mailboxes_cnt = 0;
 #else
-    if (HAL_CAN_GetTxMailboxesFreeLevel(&CAN_MCB_Handle) == 0)
+    if (HAL_CAN_GetTxMailboxesFreeLevel(&CAN_MCB_Handle) == 0) {
+        print_log("error here\r\n",NO_HEADER);
         return HAL_ERROR;
+    }
 #endif
 
     // Send message
@@ -309,7 +317,7 @@ void CAN_SendMsg(CAN_HandleTypeDef *hcan, uint16_t can_msg_id) {
 
     assert_param(hcan);
 
-    HAL_StatusTypeDef ret_code;
+    HAL_StatusTypeDef ret_code = HAL_OK;
     
     // Check that message is sent on the correct CAN bus line
     if (hcan == &CAN_MCB_Handle) {
@@ -317,7 +325,7 @@ void CAN_SendMsg(CAN_HandleTypeDef *hcan, uint16_t can_msg_id) {
     } // add below additional can modules
 
     if (ret_code != HAL_OK) {
-        //_CAN_error_handler(hcan);
+        _CAN_error_handler(hcan);
     }
 }
 

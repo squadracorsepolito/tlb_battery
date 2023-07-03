@@ -52,7 +52,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-#define VCP_TX_LOG_BUF_MAX_TIMEOUT_MS (30U)  //~27ms are necessary to send 400 chars via UART@115kbit/s
 
 /* USER CODE END PV */
 
@@ -134,6 +133,8 @@ int main(void)
             _sample_fb();
 
             // Print to uart
+            //HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)";", strlen(";"), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
+
             DB_shtdwn_status_fb_ToStringCSV(&DB_data, log_buf);
             strcat(log_buf, ",");
             HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
