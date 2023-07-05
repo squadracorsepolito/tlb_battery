@@ -104,6 +104,7 @@ target_link_libraries(${PROJECT_NAME}
     HAL::STM32::F4::TIM
     HAL::STM32::F4::TIMEx
     HAL::STM32::F4::UART
+    HAL::STM32::F4::IWDG
     STM32::Nano
     STM32::Nano::FloatPrint # Add printf/sprintf/... floating point functionality
     STM32::NoSys # already adds the -lnosys option
