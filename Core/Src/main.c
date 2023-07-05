@@ -69,6 +69,7 @@ void disable_led() {
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+volatile uint8_t can_error_detected = 0;
 /* USER CODE END 0 */
 
 /**
@@ -113,7 +114,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
     char log_buf[400]           = {0};  // init logging buffer
-    volatile uint32_t cnt_200ms = HAL_GetTick() + 200U;
+    volatile uint32_t cnt_500ms = HAL_GetTick() + 500U;
     volatile uint32_t cnt_100ms = HAL_GetTick() + 100U;
     volatile uint32_t cnt_10ms  = HAL_GetTick() + 10U;
 
@@ -147,9 +148,19 @@ int main(void)
             CAN_Send100msMessages();
         }
 
-        if (HAL_GetTick() >= cnt_200ms) {
-            cnt_200ms = HAL_GetTick() + 200U;
+        if (HAL_GetTick() >= cnt_500ms) {
+            cnt_500ms = HAL_GetTick() + 500U;
+            // Pulse green led to signal isalive
+            HAL_GPIO_TogglePin(LED_GREEN_GPIO_OUT_GPIO_Port, LED_GREEN_GPIO_OUT_Pin);
+
+            // If detected an error on the can
+            if(can_error_detected){
+                HAL_GPIO_TogglePin(LED_RED_GPIO_OUT_GPIO_Port, LED_RED_GPIO_OUT_Pin);
+            }else{
+                HAL_GPIO_WritePin(LED_RED_GPIO_OUT_GPIO_Port, LED_RED_GPIO_OUT_Pin,GPIO_PIN_RESET);
+            }
         }
+
     }
   /* USER CODE END 3 */
 }
@@ -237,7 +248,7 @@ void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
     /* User can add his own implementation to report the file name and line number,
-     * ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+     * es: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

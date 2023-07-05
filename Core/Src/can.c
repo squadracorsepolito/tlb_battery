@@ -257,11 +257,13 @@ void _CAN_tlb_battery_tsal_status_msg_construct(struct DB_data_t *db_data,
  * @brief Send a CAN message given it's id on the MAIN CAN BUS
  * @note This function will automatically gather all data for the specific message
  * @param can_msg_id The id of the message to send
+ * @param timeout_ms If no mailbox is free until timeout_ms exit with error HAL_TIMEOUT
  * @return - HAL_OK if everything went ok
  *         - HAL_ERROR in case of errors either on the CAN peripheral or
  *         internally in the function
+ *         - HAL_TIMEOUT in case a message can't be sent in case of full mailboxes
  */
-HAL_StatusTypeDef _CAN_MCB_SendMsg(uint16_t can_msg_id) {
+HAL_StatusTypeDef _CAN_MCB_SendMsg(uint16_t can_msg_id, uint16_t timeout_ms) {
 #define CAN_TX_PAYLOAD_ARRAY_SIZE (8U)
     static uint8_t can_tx_payload[CAN_TX_PAYLOAD_ARRAY_SIZE] = {0};
     static CAN_TxHeaderTypeDef can_tx_header = {.IDE = CAN_ID_STD, .RTR = CAN_RTR_DATA, .TransmitGlobalTime = DISABLE};
@@ -302,10 +304,17 @@ HAL_StatusTypeDef _CAN_MCB_SendMsg(uint16_t can_msg_id) {
     }
     send_but_full_mailboxes_cnt = 0;
 #else
-    if (HAL_CAN_GetTxMailboxesFreeLevel(&CAN_MCB_Handle) == 0) {
-        print_log("error here\r\n",NO_HEADER);
-        return HAL_ERROR;
+
+    uint32_t tick = HAL_GetTick();
+    // if no mailbox is available wait
+    while( HAL_CAN_GetTxMailboxesFreeLevel(&CAN_MCB_Handle) == 0 ){
+        // if timeout is reached exit with timeout
+        if(HAL_GetTick()-tick >= timeout_ms) {
+            print_log("CAN - timeout error\r\n",NO_HEADER);
+            return HAL_TIMEOUT;
+        }
     }
+
 #endif
 
     // Send message
@@ -321,8 +330,11 @@ void CAN_SendMsg(CAN_HandleTypeDef *hcan, uint16_t can_msg_id) {
     
     // Check that message is sent on the correct CAN bus line
     if (hcan == &CAN_MCB_Handle) {
-        ret_code = _CAN_MCB_SendMsg(can_msg_id);
+        ret_code = _CAN_MCB_SendMsg(can_msg_id,1);
     } // add below additional can modules
+
+
+    can_error_detected = ret_code != HAL_OK;
 
     if (ret_code != HAL_OK) {
         _CAN_error_handler(hcan);

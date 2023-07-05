@@ -144,6 +144,9 @@ void Error_Handler(void);
 #define CAN_MCB_Handle hcan1
 #define CAN_MCB_TxAttemptsMailboxesFull (3U)
 #define CAN_MCB_AttemptRetryDelayMsMailboxesFull (1U)
+
+
+extern volatile uint8_t can_error_detected;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
