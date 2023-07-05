@@ -21,15 +21,16 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
+#include "main.h"
 #include "mcb.h"
+#include "usart.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "usart.h"
-#include "main.h"
 
-#define print_log(_STATIC_STR_,_NOT_USED) HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)_STATIC_STR_, strlen(_STATIC_STR_), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS)
+#define print_log(_STATIC_STR_, _NOT_USED) \
+    HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)_STATIC_STR_, strlen(_STATIC_STR_), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS)
 
 struct mcb_tlb_battery_tsal_status_t CAN_tlb_battery_tsal_status;
 struct mcb_tlb_battery_shut_status_t CAN_tlb_battery_shut_status;
@@ -54,7 +55,7 @@ void MX_CAN1_Init(void) {
     hcan1.Init.TimeSeg1             = CAN_BS1_12TQ;
     hcan1.Init.TimeSeg2             = CAN_BS2_2TQ;
     hcan1.Init.TimeTriggeredMode    = DISABLE;
-    hcan1.Init.AutoBusOff           = DISABLE;
+    hcan1.Init.AutoBusOff           = ENABLE;
     hcan1.Init.AutoWakeUp           = DISABLE;
     hcan1.Init.AutoRetransmission   = DISABLE;
     hcan1.Init.ReceiveFifoLocked    = DISABLE;
@@ -185,11 +186,11 @@ static void _CAN_error_handler(CAN_HandleTypeDef *hcan) {
         sprintf(buf, "TEC (Transmit Error Counter) %d", tec_val);
         print_log(buf, NO_HEADER);
     }
-    print_log("ERROR\r\n",NO_HEADER);
+    print_log("ERROR\r\n", NO_HEADER);
 }
 
 void _CAN_tlb_battery_shut_status_msg_construct(struct DB_data_t *db_data,
-                                         struct mcb_tlb_battery_shut_status_t *can_data_msg) {
+                                                struct mcb_tlb_battery_shut_status_t *can_data_msg) {
     // clang-format off
     assert_param(mcb_tlb_battery_shut_status_is_shut_closed_pre_ams_imd_latch_is_in_range(db_data->sd_mid_in_to_ams_err_rly & 0b1U));
     assert_param(mcb_tlb_battery_shut_status_is_shut_closed_post_ams_latch_is_in_range(db_data->ams_err_rly_to_imd_err_rly & 0b1U));
@@ -214,7 +215,7 @@ void _CAN_tlb_battery_shut_status_msg_construct(struct DB_data_t *db_data,
 }
 
 void _CAN_tlb_battery_tsal_status_msg_construct(struct DB_data_t *db_data,
-                                         struct mcb_tlb_battery_tsal_status_t *can_data_msg) {
+                                                struct mcb_tlb_battery_tsal_status_t *can_data_msg) {
     // clang-format off
     assert_param(mcb_tlb_battery_tsal_status_tsal_is_green_on_is_in_range(db_data->shrt2gnd_air_neg & 0b1U));
     assert_param(mcb_tlb_battery_tsal_status_scs_short2_gnd_air_pos_is_in_range(db_data->shrt2gnd_air_pos & 0b1U));
@@ -271,7 +272,7 @@ HAL_StatusTypeDef _CAN_MCB_SendMsg(uint16_t can_msg_id, uint16_t timeout_ms) {
     if (can_msg_id == MCB_TLB_BATTERY_TSAL_STATUS_FRAME_ID) {
         can_tx_header.StdId = MCB_TLB_BATTERY_TSAL_STATUS_FRAME_ID;
         can_tx_header.DLC   = MCB_TLB_BATTERY_TSAL_STATUS_LENGTH;
-        _CAN_tlb_battery_tsal_status_msg_construct(&DB_data,&CAN_tlb_battery_tsal_status);
+        _CAN_tlb_battery_tsal_status_msg_construct(&DB_data, &CAN_tlb_battery_tsal_status);
         mcb_tlb_battery_tsal_status_pack(can_tx_payload,
                                          &CAN_tlb_battery_tsal_status,
                                          //(const struct mcb_tlb_battery_tsal_status_t *)&CAN_tlb_battery_tsal_status,
@@ -279,7 +280,7 @@ HAL_StatusTypeDef _CAN_MCB_SendMsg(uint16_t can_msg_id, uint16_t timeout_ms) {
     } else if (can_msg_id == MCB_TLB_BATTERY_SHUT_STATUS_FRAME_ID) {
         can_tx_header.StdId = MCB_TLB_BATTERY_SHUT_STATUS_FRAME_ID;
         can_tx_header.DLC   = MCB_TLB_BATTERY_SHUT_STATUS_LENGTH;
-        _CAN_tlb_battery_shut_status_msg_construct(&DB_data,&CAN_tlb_battery_shut_status);
+        _CAN_tlb_battery_shut_status_msg_construct(&DB_data, &CAN_tlb_battery_shut_status);
         mcb_tlb_battery_shut_status_pack(can_tx_payload, &CAN_tlb_battery_shut_status, CAN_TX_PAYLOAD_ARRAY_SIZE);
     } else {
         // Message id not found error out
@@ -307,10 +308,10 @@ HAL_StatusTypeDef _CAN_MCB_SendMsg(uint16_t can_msg_id, uint16_t timeout_ms) {
 
     uint32_t tick = HAL_GetTick();
     // if no mailbox is available wait
-    while( HAL_CAN_GetTxMailboxesFreeLevel(&CAN_MCB_Handle) == 0 ){
+    while (HAL_CAN_GetTxMailboxesFreeLevel(&CAN_MCB_Handle) == 0) {
         // if timeout is reached exit with timeout
-        if(HAL_GetTick()-tick >= timeout_ms) {
-            print_log("CAN - timeout error\r\n",NO_HEADER);
+        if (HAL_GetTick() - tick >= timeout_ms) {
+            print_log("CAN - timeout error\r\n", NO_HEADER);
             return HAL_TIMEOUT;
         }
     }
@@ -323,16 +324,14 @@ HAL_StatusTypeDef _CAN_MCB_SendMsg(uint16_t can_msg_id, uint16_t timeout_ms) {
 }
 
 void CAN_SendMsg(CAN_HandleTypeDef *hcan, uint16_t can_msg_id) {
-
     assert_param(hcan);
 
     HAL_StatusTypeDef ret_code = HAL_OK;
-    
+
     // Check that message is sent on the correct CAN bus line
     if (hcan == &CAN_MCB_Handle) {
-        ret_code = _CAN_MCB_SendMsg(can_msg_id,1);
-    } // add below additional can modules
-
+        ret_code = _CAN_MCB_SendMsg(can_msg_id, 1);
+    }  // add below additional can modules
 
     can_error_detected = ret_code != HAL_OK;
 
@@ -341,10 +340,9 @@ void CAN_SendMsg(CAN_HandleTypeDef *hcan, uint16_t can_msg_id) {
     }
 }
 
-void CAN_Send100msMessages(void){
-    CAN_SendMsg(&CAN_MCB_Handle,MCB_TLB_BATTERY_TSAL_STATUS_FRAME_ID);
-    CAN_SendMsg(&CAN_MCB_Handle,MCB_TLB_BATTERY_SHUT_STATUS_FRAME_ID);
+void CAN_Send100msMessages(void) {
+    CAN_SendMsg(&CAN_MCB_Handle, MCB_TLB_BATTERY_TSAL_STATUS_FRAME_ID);
+    CAN_SendMsg(&CAN_MCB_Handle, MCB_TLB_BATTERY_SHUT_STATUS_FRAME_ID);
 }
-
 
 /* USER CODE END 1 */
