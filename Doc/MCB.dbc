@@ -23,7 +23,7 @@ BU_:
 
 
 
-BO_ 7 TLB_Battery_TSALStatus: 3 Vector__XXX
+BO_ 19 TLB_Battery_TSALStatus: 3 Vector__XXX
  SG_ SCS_isAnyShort2GND_Present : 10|1@1+ (1,0) [0|1] "" Vector__XXX
  SG_ Imp_isDCBusVoltageImp_Present : 15|1@1+ (1,0) [0|1] "" Vector__XXX
  SG_ Imp_isRelayPrechargeImp_Present : 14|1@1+ (1,0) [0|1] "" Vector__XXX
@@ -42,7 +42,7 @@ BO_ 7 TLB_Battery_TSALStatus: 3 Vector__XXX
  SG_ IntentionalState_AIRNeg : 6|1@1+ (1,0) [0|1] "" Vector__XXX
  SG_ IntentionalState_AIRPos : 5|1@1+ (1,0) [0|1] "" Vector__XXX
 
-BO_ 6 TLB_Battery_ShutStatus: 3 Vector__XXX
+BO_ 18 TLB_Battery_ShutStatus: 3 Vector__XXX
  SG_ isIMDErrorLatched : 5|1@1+ (1,0) [0|1] "" Vector__XXX
  SG_ isAMSErrorLatched : 4|1@1+ (1,0) [0|1] "" Vector__XXX
  SG_ ShutdownADC_AIRsOpeningDelayCaps : 16|8@1+ (0.117,0) [0|255] "V" Vector__XXX
