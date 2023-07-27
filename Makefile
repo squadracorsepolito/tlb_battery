@@ -12,15 +12,29 @@
 # Copyright squadracorsepolito.it
 # -----------------------------------------------------------------------------
 
-.PHONY: all build cmake flash clean
+.PHONY: all erase flash flash_can flash_bootloader build build_srec cmake clean
+
+# User options
+
+# Build type: Debug|Release
+# By default = Debug
+BUILD_TYPE ?= Debug
+
+# Binary is shifted for bootloader space
+# By default = off (firmware will boot without a bootloader)
+IS_SHIFTED ?= OFF
+
 
 BUILD_DIR := build
 
 PROJECT_NAME = tlb_battery
 
-# Build type: Debug|Release
-# By default = Debug
-BUILD_TYPE ?= Debug
+CAN_TX_HEX_ID= 8
+CAN_RX_HEX_ID= 182
+
+
+# Handy aliases
+TARGET = tlb_battery
 
 all: build
 
@@ -28,13 +42,18 @@ all: build
 ${BUILD_DIR}/Makefile:
     # -B: specify build directory where to store files/generate makefile
     # -D: cmake options when CMakeList.txt is evaluated
-    #   - CMAKE_BUILD_DIR: where to put artifacts of the evaluation/buid
+    #   - PROJECT_NAME : not optional!
+    #   - CMAKE_BUILD_TYPE : output is compiled for debug or realease mode
+    #   - BOOTLOADER_SPACE_EN : whether to compile with space for the
+    #     bootloader (the firmware will not run without one) or without (normal)
     #   - CMAKE_EXPORT_COMPILE_COMMANDS: export the compilation units compile
     #     commands in a file called "compile_commands.json" in the build directory
+	echo shifted ${IS_SHIFTED};
 	cmake \
 		-B${BUILD_DIR} \
 		-DPROJECT_NAME=${PROJECT_NAME} \
 		-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+		-DBOOTLOADER_SPACE_EN=${IS_SHIFTED} \
 		-DCMAKE_EXPORT_COMPILE_COMMANDS=true 
 
 cmake: ${BUILD_DIR}/Makefile
@@ -43,33 +62,64 @@ cmake: ${BUILD_DIR}/Makefile
 	touch ./CMakeLists.txt
 
 build: cmake
-	# -j: use alla available threads
+    # -j: use all available threads
     # -C: change to BUILD_DIR directory
     # --no-print-directory: don't show the above directory change in the log
 	$(MAKE) -j -C ${BUILD_DIR} --no-print-directory
 
 
 #######################################
-# flash
-#######################################
-# Generating the .elf/.hex/.bin depends on running CMAKE and generating the makefile
-
-$(BUILD_DIR)/$(PROJECT_NAME).elf: build
-$(BUILD_DIR)/$(PROJECT_NAME).hex: build
-$(BUILD_DIR)/$(PROJECT_NAME).bin: build
-
-# Flashing can happen only if the compile output is built
-flash: $(BUILD_DIR)/$(PROJECT_NAME).elf
-	openocd -f ./openocd.cfg -c "program $(BUILD_DIR)/$(PROJECT_NAME).elf verify reset exit"
-
-#######################################
-# debug
-#######################################
-#debug: $(BUILD_DIR)/$(TARGET).elf
-#	"/run/current-system/sw/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
-
-#######################################
 # clean
 #######################################
 clean:
 	rm -rf -fR $(BUILD_DIR)
+
+#######################################
+# erase flash of micro
+#######################################
+erase:
+	openocd -f ./openocd.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
+
+#######################################
+# flash
+#######################################
+# Generating the .elf/.hex/.bin depends on running CMAKE and generating the makefile
+
+$(BUILD_DIR)/$(TARGET).elf: build
+$(BUILD_DIR)/$(TARGET).hex: build
+$(BUILD_DIR)/$(TARGET).bin: build
+
+# Flashing can happen only if the compile output is built
+flash: $(BUILD_DIR)/$(TARGET).elf
+	openocd -f ./openocd.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
+
+#######################################
+# flash bootloader
+#######################################
+flash_bootloader: 
+	openocd -f ./openocd.cfg -c "program $(BUILDIR)/openblt_f446re.elf verify reset exit"
+
+#######################################
+# debug
+#######################################
+debug: flash
+	openocd -f ./openocd.cfg 
+
+#######################################
+# build srec binary file
+#######################################
+$(BUILD_DIR)/$(TARGET)_shifted.hex: build
+$(BUILD_DIR)/$(TARGET)_shifted.elf: build
+$(BUILD_DIR)/$(TARGET)_shifted.bin: build
+
+$(BUILD_DIR)/$(TARGET)_shifted.sx : $(BUILD_DIR)/$(TARGET)_shifted.bin
+	bin2srec -a $$(grep 'FLASH (rx)      : ORIGIN =' STM32F446RETx_FLASH_shifted.ld | awk '{print $$6}' | sed 's/.$$//') \
+		-i $(BUILD_DIR)/$(TARGET)_shifted.bin -o $(BUILD_DIR)/$(TARGET)_shifted.sx
+
+build_srec: $(BUILD_DIR)/$(TARGET)_shifted.sx 
+
+#######################################
+# can flash
+#######################################
+flash_can : $(BUILD_DIR)/$(TARGET)_shifted.sx
+	BootCommander -t=xcp_can -d=can0 -b=1000000 -tid=$(CAN_TX_HEX_ID)h -rid=$(CAN_RX_HEX_ID)h $(BUILD_DIR)/$(TARGET)_shifted.sx

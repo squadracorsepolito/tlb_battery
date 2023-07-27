@@ -43,6 +43,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define VERSION_NUM_STR v1.0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -59,18 +60,20 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-void disable_led() {
-    HAL_GPIO_WritePin(LED_GREEN_GPIO_OUT_GPIO_Port, LED_GREEN_GPIO_OUT_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(LED_RED_GPIO_OUT_GPIO_Port, LED_RED_GPIO_OUT_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(LED_ORANGE_GPIO_OUT_GPIO_Port, LED_ORANGE_GPIO_OUT_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(LED_BLUE_GPIO_OUT_GPIO_Port, LED_BLUE_GPIO_OUT_Pin, GPIO_PIN_RESET);
+
+int _write(int file, char *ptr, int len) {
+    int i = 0;
+    for (i = 0; i < len; i++) {
+        ITM_SendChar(*ptr++);
+    }
+    return len;
 }
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-volatile uint8_t can_error_detected = 0;
 /* USER CODE END 0 */
 
 /**
@@ -126,6 +129,8 @@ int main(void)
     /* USER CODE BEGIN 3 */
         // Execute the feedback timebase routines runner
         //FBTMBS_routines_runner();
+        GPIO_IntEventRoutine();
+
         if (HAL_GetTick() >= cnt_10ms) {
             cnt_10ms = HAL_GetTick() + 10U;
         }
@@ -136,8 +141,6 @@ int main(void)
             _sample_fb();
 
             // Print to uart
-            //HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)";", strlen(";"), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
-
             DB_shtdwn_status_fb_ToStringCSV(&DB_data, log_buf);
             strcat(log_buf, ",");
             HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
@@ -145,9 +148,6 @@ int main(void)
             DB_tlb_intrnl_sig_fb_ToStringCSV(&DB_data, log_buf);
             strcat(log_buf, ";\n\r");
             HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
-
-            // Send 100ms can messages
-            CAN_Send100msMessages();
         }
 
         if (HAL_GetTick() >= cnt_500ms) {
@@ -156,14 +156,18 @@ int main(void)
             HAL_GPIO_TogglePin(LED_GREEN_GPIO_OUT_GPIO_Port, LED_GREEN_GPIO_OUT_Pin);
 
             // If detected an error on the can
-            if(can_error_detected){
+            if (CAN_err)
                 HAL_GPIO_TogglePin(LED_RED_GPIO_OUT_GPIO_Port, LED_RED_GPIO_OUT_Pin);
-            }else{
-                HAL_GPIO_WritePin(LED_RED_GPIO_OUT_GPIO_Port, LED_RED_GPIO_OUT_Pin,GPIO_PIN_RESET);
-            }
+            else 
+                HAL_GPIO_WritePin(LED_RED_GPIO_OUT_GPIO_Port, LED_RED_GPIO_OUT_Pin, GPIO_PIN_RESET);
+
+
         }
-        HAL_IWDG_Refresh(&hiwdg); // refresh watchdog ~500ms timeout
-    } // end while(1)
+        // needs updated data so leave routine at last
+        CAN_SendMessagesRoutine();
+
+        HAL_IWDG_Refresh(&hiwdg);  // refresh watchdog ~500ms timeout
+    }                              // end while(1)
   /* USER CODE END 3 */
 }
 
