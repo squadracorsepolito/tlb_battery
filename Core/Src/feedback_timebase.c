@@ -34,11 +34,6 @@
 #define __FBTMBS_READ_FB_INTERVAL_US ((100U) * __FBTMBS_BASE_INTERVAL_US)
 
 /* Private macro -------------------------------------------------------------*/
-/**
-* @brief Get a decimal representation of the state of a GPIO
-* @param __GPIO_BASE_NAME__ The base name of a GPIO i.e. the one found in main.h but without _Pin or _GPIO_Port
-* @retval decimal representation of the GPIO: 0U if OFF, MAX_UINT if ON
-*/
 #define __GPIO_READPIN_DECIMAL(__GPIO_BASE_NAME__) \
     (HAL_GPIO_ReadPin(__GPIO_BASE_NAME__##_GPIO_Port, __GPIO_BASE_NAME__##_Pin) == GPIO_PIN_SET ? (-1U) : (0U))
 
