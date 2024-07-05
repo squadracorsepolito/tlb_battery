@@ -56,8 +56,20 @@
 #include <inttypes.h>
 #include <tim.h>
 
-double adc_raw_data_filtered[2] = {0};
-uint16_t adc_raw_data[2]        = {0};
+// TODO: remove old
+double __adc1_dma_data_filtered[2] = {0};
+
+uint16_t __adc1_dma_data[2]        = {0};
+uint16_t __adc1_filtered_data[2]   = {0};
+/**
+ * @brief Array that maps ADC1 channels to ranks
+ * @note ranks start from 1
+ * @note non initialized channels are set to 0 an invalid rank
+ */
+static const uint8_t ADC_ADC1_Channel_to_Rank_map[ADC_Channel_NUM]={
+    [ADC_Channel6]=1,
+    [ADC_Channel8]=2
+};
 
 /* USER CODE END 0 */
 
@@ -99,7 +111,7 @@ void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Channel = ADC_CHANNEL_6;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
@@ -109,7 +121,7 @@ void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Channel = ADC_CHANNEL_8;
   sConfig.Rank = 2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
@@ -119,7 +131,7 @@ void MX_ADC1_Init(void)
 
     // Start ADC IN DMA MODE
     HAL_TIM_Base_Start(&TIM_DMA1_HandleTypeDef);
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_raw_data, hadc1.Init.NbrOfConversion);
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)__adc1_dma_data, hadc1.Init.NbrOfConversion);
 
   /* USER CODE END ADC1_Init 2 */
 
@@ -138,14 +150,20 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     __HAL_RCC_ADC1_CLK_ENABLE();
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
     /**ADC1 GPIO Configuration
-    PA0-WKUP     ------> ADC1_IN0
-    PA1     ------> ADC1_IN1
+    PA6     ------> ADC1_IN6
+    PB0     ------> ADC1_IN8
     */
-    GPIO_InitStruct.Pin = SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_Pin|SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_Pin;
+    GPIO_InitStruct.Pin = SDC_TSAC_INIT_IN_ADC_IN_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(SDC_TSAC_INIT_IN_ADC_IN_GPIO_Port, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = SDC_TSAC_FINAL_IN_ADC_IN_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(SDC_TSAC_FINAL_IN_ADC_IN_GPIO_Port, &GPIO_InitStruct);
 
     /* ADC1 DMA Init */
     /* ADC1 Init */
@@ -187,10 +205,12 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     __HAL_RCC_ADC1_CLK_DISABLE();
 
     /**ADC1 GPIO Configuration
-    PA0-WKUP     ------> ADC1_IN0
-    PA1     ------> ADC1_IN1
+    PA6     ------> ADC1_IN6
+    PB0     ------> ADC1_IN8
     */
-    HAL_GPIO_DeInit(GPIOA, SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_Pin|SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_Pin);
+    HAL_GPIO_DeInit(SDC_TSAC_INIT_IN_ADC_IN_GPIO_Port, SDC_TSAC_INIT_IN_ADC_IN_Pin);
+
+    HAL_GPIO_DeInit(SDC_TSAC_FINAL_IN_ADC_IN_GPIO_Port, SDC_TSAC_FINAL_IN_ADC_IN_Pin);
 
     /* ADC1 DMA DeInit */
     HAL_DMA_DeInit(adcHandle->DMA_Handle);
@@ -204,16 +224,17 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 }
 
 /* USER CODE BEGIN 1 */
+int16_t ADC_ADC1_getChannelRaw(enum ADC_Channel channel){
+    if (!(channel < ADC_Channel_NUM)) return -1;
+    int8_t rankNumber = ADC_ADC1_Channel_to_Rank_map[channel];
+    return rankNumber > 0 ? __adc1_dma_data[rankNumber-1] : -1;
+}
 
-// clang-format off
-#define ADC_RESOLUTION_TO_NUMB_BITS(ADC_RESOLUTION)             \
-    (ADC_RESOLUTION == ADC_RESOLUTION_12B ? 12U                 \
-         : (ADC_RESOLUTION == ADC_RESOLUTION_10B ? 10U          \
-                : (ADC_RESOLUTION == ADC_RESOLUTION_8B ? 8U     \
-                    : (ADC_RESOLUTION == ADC_RESOLUTION_6B ? 6U \
-                        : -1U))))
-// clang-format on
-
+int16_t ADC_ADC1_getChannelRawFiltered(enum ADC_Channel channel) {
+    if (!(channel < ADC_Channel_NUM)) return -1;
+    int8_t rankNumber = ADC_ADC1_Channel_to_Rank_map[channel];
+    return rankNumber > 0 ? __adc1_filtered_data[rankNumber-1] : -1;
+};
 /**
  * @brief Implements a first-order IIR single pole low pass filter 
  * @long  Y[n] = alpha * X[n] + (1-alpha)Y[n-1]
@@ -234,110 +255,96 @@ static double _ADC_IIR_first_order(double alpha, double X_n, double Y_n_min1) {
 }
 
 /**
- * @brief noise filtering function to be applied on new samples
- * @param new_sample Recently convered value
- * @param prev_filtered_sample Previous filtered value in history (already filtered)
- *
- */
-static uint32_t _ADC_sample_filtering(uint32_t new_sample, double prev_filtered_sample) {
-    /**
-    * Values on CAN bus are sent every 100ms
-    * RC = 100ms => FREQcut_off = 10Hz
-    * alpha = sampling_period / (RC + sampling_period)
-    *       = 1ms/(100ms+1ms) = 1/101 = 0.00999 ~ 1*10E-2
-    */
-#define IIR_ALPHA (0.1)  //(0.01)
-    return _ADC_IIR_first_order(IIR_ALPHA, (double)new_sample, prev_filtered_sample);
-}
-
-/**
   * @brief  Regular conversion complete callback in non blocking mode 
   * @param  hadc pointer to a ADC_HandleTypeDef structure that contains
   *         the configuration information for the specified ADC.
   * @retval None
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
-    for (int i = 0; i < hadc1.Init.NbrOfConversion; ++i) {
-        //adc_raw_data_filtered[i] = _ADC_sample_filtering(adc_raw_data[i], adc_raw_data_filtered[i]);
-        adc_raw_data_filtered[i] = (double)adc_raw_data[i];
+    if(hadc == &hadc1){
+        for (int i = 0; i < hadc1.Init.NbrOfConversion; ++i) {
+            __adc1_filtered_data[i] =  _ADC_IIR_first_order(ADC_ADC1_IIR_ALPHA,(double)__adc1_dma_data[i],(double) __adc1_filtered_data[i]);
+        }
     }
 }
 
-/**
- * @brief Transform RAW adc values to a real and physical counterpart
- * @details real_output[phisycal_unit] = offset[phisycal_value] + adc_raw_value[steps] * LSB_weight[Volts/steps] * gain[phisycal_unit/Volts]
- * @param adc_raw_data ADC raw data 
- * @param adc_res_bit ADC resolution, number of bits
- * @param adc_FSR_mv ADC full-scale input range (in milli Volts) proportional to the reference voltage (usually 3300mV or else VDDA voltage on uC)
- * @param adc_sig_res_bit ADC significant/usable resolution bits, i.e. a 12 bit reading could have only the first 8 bit significant 
- * @note adc_sig_res_bit <= adc_res_bit and both greater then 0
- * @param offset Offest of the real measure the raw data is representing, has the same physical unit of the output 
- * @param gain Multiplier coefficent that maps 1mV change to a physical change, e.g. 0.005 degC/mV means 1mV change is 0.005 degrees celsius change
- * @return real_output from the formula above
- */
-static double _ADC_RawToReal(uint32_t adc_raw_data,
-                             uint8_t adc_res_bit,
-                             double adc_FSR_mv,
-                             uint8_t adc_sig_res_bit,
-                             double offset,
-                             double gain) {
-    assert_param(adc_sig_res_bit > 0);
-    assert_param(adc_res_bit > 0);
-    assert_param(adc_sig_res_bit <= adc_res_bit);
-    // If the adc resolution is 12 bit (adc_res_bit = 12) but the usable
-    // and significant bits of the adc are the first 8 (adc_sig_res_bit = 8)
-    // We mask the adc_raw_data with 0x1111_1111_0000
-    uint32_t raw_data_significant_bits_mask = ~((1U << (adc_res_bit - adc_sig_res_bit)) - 1U);
-    uint32_t adc_raw_data_significant       = adc_raw_data & raw_data_significant_bits_mask;
-    double LSb_weight                       = adc_FSR_mv / (1U << adc_res_bit);  // Least Significan Bit weight
-    return offset + (adc_raw_data_significant * LSb_weight * gain);
-}
+///// OLD TODO: delete
 
-uint32_t ADC_Get_Filtered_Raw(ADC_HandleTypeDef *hadc, uint8_t adc_channel) {
-    if (hadc->Instance == SD_FB_ADC_Handle.Instance) {
-        switch (adc_channel) {
-            case SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_ADC_CHNL:
-                return adc_raw_data_filtered[0];
-                break;
-            case SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_ADC_CHNL:
-                return adc_raw_data_filtered[1];
-                break;
-            default:
-                // Should not be here
-                return -1U;
-                break;
-        }
-    } else
-        return -1U;  // Should not be here
-}
+///**
+// * @brief Transform RAW adc values to a real and physical counterpart
+// * @details real_output[phisycal_unit] = offset[phisycal_value] + adc_raw_value[steps] * LSB_weight[Volts/steps] * gain[phisycal_unit/Volts]
+// * @param adc_raw_data ADC raw data 
+// * @param adc_res_bit ADC resolution, number of bits
+// * @param adc_FSR_mv ADC full-scale input range (in milli Volts) proportional to the reference voltage (usually 3300mV or else VDDA voltage on uC)
+// * @param adc_sig_res_bit ADC significant/usable resolution bits, i.e. a 12 bit reading could have only the first 8 bit significant 
+// * @note adc_sig_res_bit <= adc_res_bit and both greater then 0
+// * @param offset Offest of the real measure the raw data is representing, has the same physical unit of the output 
+// * @param gain Multiplier coefficent that maps 1mV change to a physical change, e.g. 0.005 degC/mV means 1mV change is 0.005 degrees celsius change
+// * @return real_output from the formula above
+// */
+//static double _ADC_RawToReal(uint32_t adc_raw_data,
+//                             uint8_t adc_res_bit,
+//                             double adc_FSR_mv,
+//                             uint8_t adc_sig_res_bit,
+//                             double offset,
+//                             double gain) {
+//    assert_param(adc_sig_res_bit > 0);
+//    assert_param(adc_res_bit > 0);
+//    assert_param(adc_sig_res_bit <= adc_res_bit);
+//    // If the adc resolution is 12 bit (adc_res_bit = 12) but the usable
+//    // and significant bits of the adc are the first 8 (adc_sig_res_bit = 8)
+//    // We mask the adc_raw_data with 0x1111_1111_0000
+//    uint32_t raw_data_significant_bits_mask = ~((1U << (adc_res_bit - adc_sig_res_bit)) - 1U);
+//    uint32_t adc_raw_data_significant       = adc_raw_data & raw_data_significant_bits_mask;
+//    double LSb_weight                       = adc_FSR_mv / (1U << adc_res_bit);  // Least Significan Bit weight
+//    return offset + (adc_raw_data_significant * LSb_weight * gain);
+//}
+//
+//uint32_t ADC_Get_Filtered_Raw(ADC_HandleTypeDef *hadc, uint8_t adc_channel) {
+//    if (hadc->Instance == SD_FB_ADC_Handle.Instance) {
+//        switch (adc_channel) {
+//            case SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_ADC_CHNL:
+//                return __adc1_dma_data_filtered[0];
+//                break;
+//            case SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_ADC_CHNL:
+//                return __adc1_dma_data_filtered[1];
+//                break;
+//            default:
+//                // Should not be here
+//                return -1U;
+//                break;
+//        }
+//    } else
+//        return -1U;  // Should not be here
+//}
 
-double ADC_Get_Filtered_Real(ADC_HandleTypeDef *hadc, uint8_t adc_channel) {
-    uint32_t raw = ADC_Get_Filtered_Raw(hadc, adc_channel);
-    if (raw != (-1U))
-        return ADC_RawToReal(hadc, adc_channel, raw);
-    else
-        return DBL_MAX;
-}
-
-double ADC_RawToReal(ADC_HandleTypeDef *hadc, uint8_t adc_channel, uint32_t raw_adc_value) {
-    assert_param(IS_ADC_CHANNEL(adc_channel));
-    if (hadc->Instance == SD_FB_ADC_Handle.Instance) {
-        switch (adc_channel) {
-            case SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_ADC_CHNL:
-            case SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_ADC_CHNL:
-                return _ADC_RawToReal(raw_adc_value,
-                                      ADC_RESOLUTION_TO_NUMB_BITS(hadc->Init.Resolution),
-                                      ADC_VDDA_mV,
-                                      ADC_RESOLUTION_TO_NUMB_BITS(hadc->Init.Resolution),
-                                      SD_FB_ADC_OFFSET,
-                                      SD_FB_ADC_GAIN);
-                break;
-            default:
-                // Should not be here
-                return 0;
-                break;
-        }
-    } else
-        return 0;  // Should not be here
-}
+//double ADC_Get_Filtered_Real(ADC_HandleTypeDef *hadc, uint8_t adc_channel) {
+//    uint32_t raw = ADC_Get_Filtered_Raw(hadc, adc_channel);
+//    if (raw != (-1U))
+//        return ADC_RawToReal(hadc, adc_channel, raw);
+//    else
+//        return DBL_MAX;
+//}
+//
+//double ADC_RawToReal(ADC_HandleTypeDef *hadc, uint8_t adc_channel, uint32_t raw_adc_value) {
+//    assert_param(IS_ADC_CHANNEL(adc_channel));
+//    if (hadc->Instance == SD_FB_ADC_Handle.Instance) {
+//        switch (adc_channel) {
+//            case SD_FB_SD_DLY_CAPS_TO_SD_FIN_OUT_AIRS_ADC1_IN_ADC_CHNL:
+//            case SD_FB_SD_PRCH_RLY_TO_SD_MID_OUT_ADC1_IN_ADC_CHNL:
+//                return _ADC_RawToReal(raw_adc_value,
+//                                      ADC_RESOLUTION_TO_NUMB_BITS(hadc->Init.Resolution),
+//                                      ADC_VDDA_mV,
+//                                      ADC_RESOLUTION_TO_NUMB_BITS(hadc->Init.Resolution),
+//                                      SD_FB_ADC_OFFSET,
+//                                      SD_FB_ADC_GAIN);
+//                break;
+//            default:
+//                // Should not be here
+//                return 0;
+//                break;
+//        }
+//    } else
+//        return 0;  // Should not be here
+//}
 /* USER CODE END 1 */

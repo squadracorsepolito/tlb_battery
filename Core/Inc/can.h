@@ -42,31 +42,11 @@ void MX_CAN1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
+extern CAN_TxHeaderTypeDef CAN_CAN1_tx_header;
 extern volatile uint8_t CAN_err;
 
-/**
- * @brief Send a message on a specific CAN bus line 
- * @note This function automatically gathers the necessary and most updated
- *       data for the specific message
- * @param hcan CAN Handle of type @ref CAN_HandleTypdef operating on a specific CAN Bus line
- * @param can_msg_id Id of the can message to send
- */
-void CAN_SendMsg(CAN_HandleTypeDef *hcan, uint16_t can_msg_id);
 
-/**
- * @brief CAN send messages routine
- */
-void CAN_SendMessagesRoutine(void);
-
-/**
- * @brief Send all 100ms period CAN messages
- */
-void CAN_Send100msMessages(void);
-
-/**
- * @brief Send all 1sec period CAN messages
- */
-void CAN_Send1secMessages(void);
+HAL_StatusTypeDef CAN_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header);
 
 /* USER CODE END Prototypes */
 

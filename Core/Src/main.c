@@ -22,15 +22,15 @@
 #include "can.h"
 #include "dma.h"
 #include "iwdg.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "db.h"
-#include "feedback_timebase.h"
 
+#include "bsp.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -43,7 +43,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define VERSION_NUM_STR v1.0
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -82,6 +82,7 @@ int _write(int file, char *ptr, int len) {
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -106,29 +107,27 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_TIM2_Init();
-  MX_TIM6_Init();
   MX_ADC1_Init();
   MX_CAN1_Init();
   MX_USART2_UART_Init();
   MX_IWDG_Init();
+  MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
-    FBTMBS_init();
-    HAL_CAN_Start(&hcan1);
+  MCB_send_msg(MCB_TLB_BATTERY_HELO);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
     char log_buf[400]           = {0};  // init logging buffer
-    volatile uint32_t cnt_500ms = HAL_GetTick() + 500U;
-    volatile uint32_t cnt_100ms = HAL_GetTick() + 100U;
     volatile uint32_t cnt_10ms  = HAL_GetTick() + 10U;
-
+    volatile uint32_t cnt_100ms = HAL_GetTick() + 100U;
+    volatile uint32_t cnt_500ms = HAL_GetTick() + 500U;
+    volatile uint32_t cnt_1s  = HAL_GetTick() + 1000U;
     while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-        // Execute the feedback timebase routines runner
-        //FBTMBS_routines_runner();
+        #if 0
         GPIO_IntEventRoutine();
 
         if (HAL_GetTick() >= cnt_10ms) {
@@ -150,23 +149,18 @@ int main(void)
             HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
         }
 
-        if (HAL_GetTick() >= cnt_500ms) {
-            cnt_500ms = HAL_GetTick() + 500U;
-            // Pulse green led to signal isalive
-            HAL_GPIO_TogglePin(LED_GREEN_GPIO_OUT_GPIO_Port, LED_GREEN_GPIO_OUT_Pin);
+        STAT_LED_Routine();
+        SDC_SENS_Routine();
+        SDC_ANAL_SENS_Routine();
+        SIG_SENS_Routine();
+        HVRLYS_SENS_Routine();
+        
 
-            // If detected an error on the can
-            if (CAN_err)
-                HAL_GPIO_TogglePin(LED_RED_GPIO_OUT_GPIO_Port, LED_RED_GPIO_OUT_Pin);
-            else 
-                HAL_GPIO_WritePin(LED_RED_GPIO_OUT_GPIO_Port, LED_RED_GPIO_OUT_Pin, GPIO_PIN_RESET);
-
-
-        }
-        // needs updated data so leave routine at last
-        CAN_SendMessagesRoutine();
+        // needs updated data so leave routine as last
+        MCB_SendMessagesRoutine();
 
         HAL_IWDG_Refresh(&hiwdg);  // refresh watchdog ~500ms timeout
+        #endif
     }                              // end while(1)
   /* USER CODE END 3 */
 }
