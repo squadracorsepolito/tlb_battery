@@ -19,8 +19,8 @@
 
 #include "adc.h"
 #include "can.h"
-#include "mcb.h"
 #include "conf.h"
+#include "mcb.h"
 
 /* # Shared #################################################################*/
 
@@ -147,7 +147,7 @@ static const struct GPIO_Tuple SIG_SENS_Probe_to_GPIO_Tuple_map[SIG_SENS_Probe_N
                                               .GPIO_Pin  = nSTG_AIR_NEG_GPIO_IN_Pin},
     [SIG_SENS_AnyImpl_Latched]             = {.GPIO_Port = ANY_IMPL_ERR_LATCH_GPIO_IN_GPIO_Port,
                                               .GPIO_Pin  = ANY_IMPL_ERR_LATCH_GPIO_IN_Pin},
-    [SIG_SENS_Impl_DcBusRlysSignals]       = {.GPIO_Port = DCBUS_RELAYS_IMPL_GPIO_IN_GPIO_Port,
+    [SIG_SENS_Impl_AIRsSignals]            = {.GPIO_Port = DCBUS_RELAYS_IMPL_GPIO_IN_GPIO_Port,
                                               .GPIO_Pin  = DCBUS_RELAYS_IMPL_GPIO_IN_Pin},
     [SIG_SENS_Impl_HVRlysSignals] = {.GPIO_Port = DCBUS_IMPL_GPIO_IN_GPIO_Port, .GPIO_Pin = DCBUS_IMPL_GPIO_IN_Pin}};
 
@@ -159,7 +159,7 @@ static uint8_t SIG_SENS_GPIO_invert_matrix[SIG_SENS_Probe_NUM] = {[SIG_SENS_AMS_
                                                                   [SIG_SENS_STG_on_AIR_Pos_MechStateSig] = 1U,
                                                                   [SIG_SENS_STG_on_AIR_Neg_MechStateSig] = 1U,
                                                                   [SIG_SENS_AnyImpl_Latched]             = 0U,
-                                                                  [SIG_SENS_Impl_DcBusRlysSignals]       = 0U,
+                                                                  [SIG_SENS_Impl_AIRsSignals]            = 0U,
                                                                   [SIG_SENS_Impl_HVRlysSignals]          = 0U};
 
 /*---------- Private function prototypes ------------------------------------*/

@@ -28,7 +28,6 @@ struct GPIO_Tuple {
     uint16_t GPIO_Pin;
 };
 
-
 /* ---------- Exported constants --------------------------------------------*/
 
 /* ---------- Exported variables --------------------------------------------*/
@@ -56,9 +55,9 @@ extern volatile uint32_t ERR_flags;
  * @details responds to isOpen / isClosed
  */
 enum SDC_SENS_Probe {
-    SDC_SENS_TSAC_InitialIn,  /*!< ShutDown Circuit Sensing on TSAC Initial Input */
+    SDC_SENS_TSAC_InitialIn,   /*!< ShutDown Circuit Sensing on TSAC Initial Input */
     SDC_SENS_Post_AMS_IMD_Rly, /*!< ShutDown Circuit Sensing after AMS/IMD Error relays */
-    SDC_SENS_TSAC_FinalIn,    /*!< ShutDown Circuit Sensing on TSAC Final Input */
+    SDC_SENS_TSAC_FinalIn,     /*!< ShutDown Circuit Sensing on TSAC Final Input */
     SDC_SENS_Probe_NUM         /*!< Number of SDC SENS enum values */
 };
 
@@ -66,13 +65,13 @@ enum SDC_SENS_Probe {
  * @brief SDC Analog Value Sensing Probes
  */
 enum SDC_ANAL_SENS_Probe {
-    SDC_ANAL_SENS_TSAC_InitialIn,  /*!< ShutDown Circuit Analog Sensing on TSAC Initial Input */
-    SDC_ANAL_SENS_TSAC_FinalIn,    /*!< ShutDown Circuit Analog Sensing on TSAC Final Input */
-    SDC_ANAL_SENS_Probe_NUM         /*!< Number of SDC SENS enum values */
+    SDC_ANAL_SENS_TSAC_InitialIn, /*!< ShutDown Circuit Analog Sensing on TSAC Initial Input */
+    SDC_ANAL_SENS_TSAC_FinalIn,   /*!< ShutDown Circuit Analog Sensing on TSAC Final Input */
+    SDC_ANAL_SENS_Probe_NUM       /*!< Number of SDC SENS enum values */
 };
 
 /* ---------- Exported constants --------------------------------------------*/
-#define SDC_SENS_SAMPLING_PERIOD_MS (100U);
+#define SDC_SENS_SAMPLING_PERIOD_MS      (100U);
 #define SDC_ANAL_SENS_SAMPLING_PERIOD_MS (300U);
 /* ---------- Exported variables --------------------------------------------*/
 
@@ -126,7 +125,7 @@ enum SIG_SENS_Probe {
     SIG_SENS_STG_on_AIR_Pos_MechStateSig, /*!< Short To Gnd on "AIR Positive Mechanical State" Signal */
     SIG_SENS_STG_on_AIR_Neg_MechStateSig, /*!< Short To Gnd on "AIR Negative Mechanical State" Signal */
     SIG_SENS_AnyImpl_Latched,             /*!< Any Implausibility Error - Latched signal */
-    SIG_SENS_Impl_DcBusRlysSignals,       /*!< Implausibility Error on DC-BUS Relays signals */
+    SIG_SENS_Impl_AIRsSignals,            /*!< Implausibility Error on DC-BUS Relays signals */
     SIG_SENS_Impl_HVRlysSignals,          /*!< Implausibility Error on HV Relays Signals */
     SIG_SENS_Probe_NUM                    /*!< Number of SIG_SENS enum values */
 };
@@ -246,11 +245,11 @@ void MCB_SendMessagesRoutine(void);
 
 /* ---------- Exported types ------------------------------------------------*/
 enum STAT_LED_Device {
-    STAT_LED_KEEP_ALIVE,  /*!< Keep Alive Led */ 
-    STAT_LED_USER1,       /*!< Status Led User 1 */
-    STAT_LED_USER2,       /*!< Status Led User 2 */
-    STAT_LED_WARN,        /*!< Warning Led */
-    STAT_LED_ERR,         /*!< Error Led */
+    STAT_LED_KEEP_ALIVE, /*!< Keep Alive Led */
+    STAT_LED_USER1,      /*!< Status Led User 1 */
+    STAT_LED_USER2,      /*!< Status Led User 2 */
+    STAT_LED_WARN,       /*!< Warning Led */
+    STAT_LED_ERR,        /*!< Error Led */
     STAT_LED_Device_NUM
 };
 
@@ -258,7 +257,7 @@ enum STAT_LED_Device {
 
 /* ---------- Exported variables --------------------------------------------*/
 #define STAT_LED_KEEP_ALIVE_BLINK_PERIOD_MS (1000U);
-#define STAT_LED_ERR_PERSISTENCY_MS (50U);
+#define STAT_LED_ERR_PERSISTENCY_MS         (50U);
 
 /* ---------- Exported macros -----------------------------------------------*/
 
