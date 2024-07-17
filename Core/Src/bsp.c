@@ -54,12 +54,13 @@ volatile uint32_t ERR_flags;
 /*---------- Private variables ----------------------------------------------*/
 
 static const struct GPIO_Tuple SDC_SENS_Probe_to_GPIO_Tuple_map[SDC_SENS_Probe_NUM] = {
-    [SDC_ANAL_SENS_TSAC_InitialIn] = {.GPIO_Port = SDC_TSAC_INIT_IN_ADC_IN_GPIO_Port,
+    [SDC_SENS_TSAC_InitialIn] = {.GPIO_Port = SDC_TSAC_INIT_IN_ADC_IN_GPIO_Port,
                                       .GPIO_Pin  = SDC_TSAC_INIT_IN_ADC_IN_Pin},
     [SDC_SENS_Post_AMS_IMD_Rly]    = {.GPIO_Port = SDC_POST_AMS_IMD_RLY_GPIO_IN_GPIO_Port,
                                       .GPIO_Pin  = SDC_POST_AMS_IMD_RLY_GPIO_IN_Pin},
-    [SDC_ANAL_SENS_TSAC_FinalIn]   = {.GPIO_Port = SDC_TSAC_FINAL_IN_ADC_IN_GPIO_Port,
-                                      .GPIO_Pin  = SDC_TSAC_FINAL_IN_ADC_IN_Pin}};
+    [SDC_SENS_TSAC_FinalIn]   = {.GPIO_Port = SDC_TSAC_FINAL_IN_ADC_IN_GPIO_Port,
+                                      .GPIO_Pin  = SDC_TSAC_FINAL_IN_ADC_IN_Pin}
+};
 static const enum ADC_Channel SDC_ANAL_SENS_Probe_to_ADC_Channel_map[SDC_ANAL_SENS_Probe_NUM] =
     {[SDC_ANAL_SENS_TSAC_InitialIn] = ADC_Channel6, [SDC_ANAL_SENS_TSAC_FinalIn] = ADC_Channel8};
 
@@ -77,7 +78,7 @@ uint8_t SDC_SENS_Probe_sampleStatus(enum SDC_SENS_Probe probe) {
     assert_param(probe != SDC_SENS_Probe_NUM);
     GPIO_TypeDef *port = SDC_SENS_Probe_to_GPIO_Tuple_map[probe].GPIO_Port;
     uint16_t pin       = SDC_SENS_Probe_to_GPIO_Tuple_map[probe].GPIO_Pin;
-    return HAL_GPIO_ReadPin(port, pin) == GPIO_PIN_SET ? 1 : 0;
+    return (HAL_GPIO_ReadPin(port, pin) == GPIO_PIN_SET) ? 1 : 0;
 }
 
 uint8_t SDC_SENS_Probe_getStatus(enum SDC_SENS_Probe probe) {
@@ -91,7 +92,7 @@ void SDC_SENS_Routine(void) {
         routine_tim = HAL_GetTick() + SDC_SENS_SAMPLING_PERIOD_MS;
         for (int i = 0; i < SDC_SENS_Probe_NUM; i++) {
             // TODO: add persistency of errors
-            SDC_SENS_probe_values &= !((uint32_t)((1U) << i));                 // reset the value
+            SDC_SENS_probe_values &= ~((uint32_t)((1U) << i));                 // reset the value
             SDC_SENS_probe_values |= ((SDC_SENS_Probe_sampleStatus(i)) << i);  // set the value
         }
     }
@@ -177,7 +178,7 @@ uint8_t SIG_SENS_Probe_sampleStatus(enum SIG_SENS_Probe probe) {
 
     // Invert reading if values on GPIO are inverted
     GPIO_PinState compareValue = SIG_SENS_GPIO_invert_matrix[probe] ? GPIO_PIN_RESET : GPIO_PIN_SET;
-    return HAL_GPIO_ReadPin(port, pin) == compareValue ? 1 : 0;
+    return (HAL_GPIO_ReadPin(port, pin) == compareValue) ? 1 : 0;
 }
 
 uint8_t SIG_SENS_Probe_getStatus(enum SIG_SENS_Probe probe) {
@@ -191,7 +192,7 @@ void SIG_SENS_Routine(void) {
         routine_tim = HAL_GetTick() + SIG_SENS_SAMPLING_PERIOD_MS;
         for (int i = 0; i < SIG_SENS_Probe_NUM; i++) {
             // TODO: add persistency of errors
-            SIG_SENS_probe_values &= !((uint32_t)((1U) << i));                 // reset the value
+            SIG_SENS_probe_values &= ~((uint32_t)((1U) << i));                 // reset the value
             SIG_SENS_probe_values |= ((SIG_SENS_Probe_sampleStatus(i)) << i);  // set the value
         }
     }
@@ -256,7 +257,7 @@ void HVRLYS_SENS_Routine(void) {
         routine_tim = HAL_GetTick() + HVRLYS_SENS_SAMPLING_PERIOD_MS;
         for (int i = 0; i < HVRLYS_SENS_Probe_NUM; i++) {
             // TODO: add persistency of errors
-            HVRLYS_SENS_probe_values &= !((uint32_t)((1U) << i));                    // reset the value
+            HVRLYS_SENS_probe_values &= ~((uint32_t)((1U) << i));                    // reset the value
             HVRLYS_SENS_probe_values |= ((HVRLYS_SENS_Probe_sampleStatus(i)) << i);  // set the value
         }
     }
@@ -326,26 +327,26 @@ void MCB_send_msg(uint32_t id) {
             //assert_param(mcb_tlb_battery_tsal_status_imp_is_any_imp_latched_is_in_range(DB_data.any_impl_err_ltch & 0b1U));
             //assert_param(mcb_tlb_battery_tsal_status_tsal_is_green_on_is_in_range(DB_data.tsal_green & 0b1U));
 
-            //msg.tlb_battery_tsal_status.scs_short2_gnd_air_neg             = mcb_tlb_battery_tsal_status_tsal_is_green_on_encode(DB_data.shrt2gnd_air_neg & 0b1U);
-            //msg.tlb_battery_tsal_status.scs_short2_gnd_air_pos             = mcb_tlb_battery_tsal_status_scs_short2_gnd_air_pos_encode(DB_data.shrt2gnd_air_pos & 0b1U);
-            //msg.tlb_battery_tsal_status.scs_is_any_short2_gnd_present      = mcb_tlb_battery_tsal_status_scs_is_any_short2_gnd_present_encode(DB_data.shrt2gnd_airs & 0b1U);
-            //msg.tlb_battery_tsal_status.tsal_is_dc_bus_over60_v            = mcb_tlb_battery_tsal_status_tsal_is_dc_bus_over60_v_encode(DB_data.dcbus_over_60v & 0b1U);
-            //msg.tlb_battery_tsal_status.intentional_state_air_neg          = mcb_tlb_battery_tsal_status_intentional_state_air_neg_encode(DB_data.air_neg_int_sd_rel & 0b1U);
-            //msg.tlb_battery_tsal_status.intentional_state_air_pos          = mcb_tlb_battery_tsal_status_intentional_state_air_pos_encode(DB_data.air_pos_int_sd_rel & 0b1U);
-            //msg.tlb_battery_tsal_status.intentional_state_relay_precharge  = mcb_tlb_battery_tsal_status_intentional_state_relay_precharge_encode(DB_data.dcbus_prch_rly_int_sd_rel & 0b1U);
-            //msg.tlb_battery_tsal_status.tsal_is_air_neg_closed             = mcb_tlb_battery_tsal_status_tsal_is_air_neg_closed_encode(DB_data.air_neg_aux & 0b1U);
-            //msg.tlb_battery_tsal_status.tsal_is_air_pos_closed             = mcb_tlb_battery_tsal_status_tsal_is_air_pos_closed_encode(DB_data.air_pos_aux & 0b1U);
-            //msg.tlb_battery_tsal_status.tsal_is_relay_precharge_closed     = mcb_tlb_battery_tsal_status_tsal_is_relay_precharge_closed_encode(DB_data.dcbus_prch_rly_aux & 0b1U);
-            //msg.tlb_battery_tsal_status.imp_is_air_neg_imp_present         = mcb_tlb_battery_tsal_status_imp_is_air_neg_imp_present_encode(DB_data.air_neg_impl_err & 0b1U);
-            //msg.tlb_battery_tsal_status.imp_is_air_pos_imp_present         = mcb_tlb_battery_tsal_status_imp_is_air_pos_imp_present_encode(DB_data.air_pos_impl_err & 0b1U);
-            //msg.tlb_battery_tsal_status.imp_is_relay_precharge_imp_present = mcb_tlb_battery_tsal_status_imp_is_relay_precharge_imp_present_encode(DB_data.dcbus_prch_rly_impl_err & 0b1U);
-            //msg.tlb_battery_tsal_status.imp_is_dc_bus_voltage_imp_present  = mcb_tlb_battery_tsal_status_imp_is_dc_bus_voltage_imp_present_encode(DB_data.dcbus_over_60v_impl_err & 0b1U);
-            //msg.tlb_battery_tsal_status.imp_is_any_imp_present             = mcb_tlb_battery_tsal_status_imp_is_any_imp_present_encode(DB_data.any_impl_err & 0b1U);
-            //msg.tlb_battery_tsal_status.imp_is_any_imp_latched             = mcb_tlb_battery_tsal_status_imp_is_any_imp_latched_encode(DB_data.any_impl_err_ltch & 0b1U);
-            //msg.tlb_battery_tsal_status.tsal_is_green_on                   = mcb_tlb_battery_tsal_status_tsal_is_green_on_encode(DB_data.tsal_green & 0b1U);
+            msg.tlb_battery_tsal_status.scs_short2_gnd_air_neg             = mcb_tlb_battery_tsal_status_scs_short2_gnd_air_neg_encode(SIG_SENS_Probe_getStatus(SIG_SENS_STG_on_AIR_Neg_MechStateSig) & 0b1U);
+            msg.tlb_battery_tsal_status.scs_short2_gnd_air_pos             = mcb_tlb_battery_tsal_status_scs_short2_gnd_air_pos_encode(SIG_SENS_Probe_getStatus(SIG_SENS_STG_on_AIR_Pos_MechStateSig) & 0b1U);
+            msg.tlb_battery_tsal_status.scs_is_any_short2_gnd_present      = mcb_tlb_battery_tsal_status_scs_is_any_short2_gnd_present_encode((SIG_SENS_Probe_getStatus(SIG_SENS_STG_on_AIR_Pos_MechStateSig) & 0b1U) | (SIG_SENS_Probe_getStatus(SIG_SENS_STG_on_AIR_Neg_MechStateSig) & 0b1U));
+            msg.tlb_battery_tsal_status.tsal_is_dc_bus_over60_v            = mcb_tlb_battery_tsal_status_tsal_is_dc_bus_over60_v_encode(SIG_SENS_Probe_getStatus(SIG_SENS_DCBusOver60V) & 0b1U);
+            msg.tlb_battery_tsal_status.intentional_state_air_neg          = mcb_tlb_battery_tsal_status_intentional_state_air_neg_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Neg_Cmd) & 0b1U);
+            msg.tlb_battery_tsal_status.intentional_state_air_pos          = mcb_tlb_battery_tsal_status_intentional_state_air_pos_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Pos_Cmd) & 0b1U);
+            msg.tlb_battery_tsal_status.intentional_state_relay_precharge  = mcb_tlb_battery_tsal_status_intentional_state_relay_precharge_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_DCBus_PrechRly_Cmd) & 0b1U);
+            msg.tlb_battery_tsal_status.tsal_is_air_neg_closed             = mcb_tlb_battery_tsal_status_tsal_is_air_neg_closed_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Neg_MechStateClosed) & 0b1U);
+            msg.tlb_battery_tsal_status.tsal_is_air_pos_closed             = mcb_tlb_battery_tsal_status_tsal_is_air_pos_closed_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Pos_MechStateClosed) & 0b1U);
+            msg.tlb_battery_tsal_status.tsal_is_relay_precharge_closed     = mcb_tlb_battery_tsal_status_tsal_is_relay_precharge_closed_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_DCBus_PrechRly_MechStateClosed) & 0b1U);
+            msg.tlb_battery_tsal_status.imp_is_air_neg_imp_present         = mcb_tlb_battery_tsal_status_imp_is_air_neg_imp_present_encode(SIG_SENS_Probe_getStatus(SIG_SENS_Impl_AIRsSignals) & 0b1U);
+            msg.tlb_battery_tsal_status.imp_is_air_pos_imp_present         = mcb_tlb_battery_tsal_status_imp_is_air_pos_imp_present_encode(SIG_SENS_Probe_getStatus(SIG_SENS_Impl_AIRsSignals) & 0b1U);
+            msg.tlb_battery_tsal_status.imp_is_relay_precharge_imp_present = mcb_tlb_battery_tsal_status_imp_is_relay_precharge_imp_present_encode(SIG_SENS_Probe_getStatus(SIG_SENS_Impl_HVRlysSignals) & 0b1U);
+            msg.tlb_battery_tsal_status.imp_is_dc_bus_voltage_imp_present  = mcb_tlb_battery_tsal_status_imp_is_dc_bus_voltage_imp_present_encode(0 & 0b1U);
+            msg.tlb_battery_tsal_status.imp_is_any_imp_present             = mcb_tlb_battery_tsal_status_imp_is_any_imp_present_encode(0 & 0b1U);
+            msg.tlb_battery_tsal_status.imp_is_any_imp_latched             = mcb_tlb_battery_tsal_status_imp_is_any_imp_latched_encode(SIG_SENS_Probe_getStatus(SIG_SENS_AnyImpl_Latched) & 0b1U);
+            msg.tlb_battery_tsal_status.tsal_is_green_on                   = mcb_tlb_battery_tsal_status_tsal_is_green_on_encode(SIG_SENS_Probe_getStatus(SIG_SENS_TSAL_Green) & 0b1U);
             // clang-format on
 
-            //CAN_CAN1_tx_header.DLC = mcb_tlb_battery_tsal_status_pack(buffer, &msg.tlb_battery_tsal_status, 8);
+            CAN_CAN1_tx_header.DLC = mcb_tlb_battery_tsal_status_pack(buffer, &msg.tlb_battery_tsal_status, 8);
             break;
         case MCB_TLB_BATTERY_SHUT_STATUS_FRAME_ID:
 
@@ -360,18 +361,18 @@ void MCB_send_msg(uint32_t id) {
             //assert_param(mcb_tlb_battery_shut_status_shutdown_adc_post_sd_precharge_relay_is_in_range(DB_data.sd_prch_rly_to_sd_mid_out_V));
             //assert_param(mcb_tlb_battery_shut_status_shutdown_adc_ai_rs_opening_delay_caps_is_in_range(DB_data.sd_dly_caps_to_sd_fin_out_airs_V));
 
-            //msg.tlb_battery_shut_status.is_shut_closed_pre_ams_imd_latch      = mcb_tlb_battery_shut_status_is_shut_closed_pre_ams_imd_latch_encode(DB_data.sd_mid_in_to_ams_err_rly & 0b1U);
-            //msg.tlb_battery_shut_status.is_shut_closed_post_ams_latch         = mcb_tlb_battery_shut_status_is_shut_closed_post_ams_latch_encode(DB_data.ams_err_rly_to_imd_err_rly & 0b1U);
-            //msg.tlb_battery_shut_status.is_shut_closed_post_imd_latch         = mcb_tlb_battery_shut_status_is_shut_closed_post_imd_latch_encode(DB_data.imd_err_rly_to_sd_prch_rly & 0b1U);
-            //msg.tlb_battery_shut_status.is_shutdown_closed_pre_tlb_batt_final = mcb_tlb_battery_shut_status_is_shutdown_closed_pre_tlb_batt_final_encode(DB_data.sd_fnl_in_to_sd_dly_caps & 0b1U);
-            //msg.tlb_battery_shut_status.is_ams_error_latched                  = mcb_tlb_battery_shut_status_is_ams_error_latched_encode(DB_data.ams_err & 0b1U);
-            //msg.tlb_battery_shut_status.is_imd_error_latched                  = mcb_tlb_battery_shut_status_is_imd_error_latched_encode(DB_data.imd_err & 0b1U);
-            //msg.tlb_battery_shut_status.is_sd_prch_rly_closed                 = mcb_tlb_battery_shut_status_is_sd_prch_rly_closed_encode(DB_data.sd_prch_rly & 0b1U);
-            //msg.tlb_battery_shut_status.shutdown_adc_post_sd_precharge_relay  = mcb_tlb_battery_shut_status_shutdown_adc_post_sd_precharge_relay_encode(DB_data.sd_prch_rly_to_sd_mid_out_V);
-            //msg.tlb_battery_shut_status.shutdown_adc_ai_rs_opening_delay_caps = mcb_tlb_battery_shut_status_shutdown_adc_ai_rs_opening_delay_caps_encode(DB_data.sd_dly_caps_to_sd_fin_out_airs_V);
+            msg.tlb_battery_shut_status.is_shut_closed_pre_ams_imd_latch      = mcb_tlb_battery_shut_status_is_shut_closed_pre_ams_imd_latch_encode(SDC_SENS_Probe_getStatus(SDC_SENS_TSAC_InitialIn) & 0b1U);
+            msg.tlb_battery_shut_status.is_shut_closed_post_ams_latch         = mcb_tlb_battery_shut_status_is_shut_closed_post_ams_latch_encode(SDC_SENS_Probe_getStatus(SDC_SENS_Post_AMS_IMD_Rly) & 0b1U);
+            msg.tlb_battery_shut_status.is_shut_closed_post_imd_latch         = mcb_tlb_battery_shut_status_is_shut_closed_post_imd_latch_encode(SDC_SENS_Probe_getStatus(SDC_SENS_Post_AMS_IMD_Rly) & 0b1U);
+            msg.tlb_battery_shut_status.is_shutdown_closed_pre_tlb_batt_final = mcb_tlb_battery_shut_status_is_shutdown_closed_pre_tlb_batt_final_encode(SDC_SENS_Probe_getStatus(SDC_SENS_TSAC_FinalIn) & 0b1U);
+            msg.tlb_battery_shut_status.is_ams_error_latched                  = mcb_tlb_battery_shut_status_is_ams_error_latched_encode(SIG_SENS_Probe_getStatus(SIG_SENS_AMS_Err_Latched) & 0b1U);
+            msg.tlb_battery_shut_status.is_imd_error_latched                  = mcb_tlb_battery_shut_status_is_imd_error_latched_encode(SIG_SENS_Probe_getStatus(SIG_SENS_IMD_Err_Latched) & 0b1U);
+            msg.tlb_battery_shut_status.is_sd_prch_rly_closed                 = mcb_tlb_battery_shut_status_is_sd_prch_rly_closed_encode(SIG_SENS_Probe_getStatus(SIG_SENS_SDCPrechRlyCmd) & 0b1U);
+            msg.tlb_battery_shut_status.shutdown_adc_post_sd_precharge_relay  = mcb_tlb_battery_shut_status_shutdown_adc_post_sd_precharge_relay_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_InitialIn));
+            msg.tlb_battery_shut_status.shutdown_adc_ai_rs_opening_delay_caps = mcb_tlb_battery_shut_status_shutdown_adc_ai_rs_opening_delay_caps_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_FinalIn));
             // clang-format on
 
-            //CAN_CAN1_tx_header.DLC = mcb_tlb_battery_shut_status_pack(buffer, &msg.tlb_battery_shut_status, 8);
+            CAN_CAN1_tx_header.DLC = mcb_tlb_battery_shut_status_pack(buffer, &msg.tlb_battery_shut_status, 8);
             break;
         case MCB_TLB_BATTERY_HELO:
 
@@ -451,7 +452,7 @@ void STAT_LED_disable(enum STAT_LED_Device device) {
     uint16_t pin       = STAT_LED_Device_to_GPIO_Tuple_map[device].GPIO_Pin;
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
 }
-void STAT_LED_routine(void) {
+void STAT_LED_Routine(void) {
     static uint32_t keep_alive_blink_tim      = STAT_LED_KEEP_ALIVE_BLINK_PERIOD_MS;
     static uint32_t show_error_with_delay_tim = 0;
     if (HAL_GetTick() >= keep_alive_blink_tim) {

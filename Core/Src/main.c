@@ -127,34 +127,34 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-        #if 0
+        #if 1
         GPIO_IntEventRoutine();
 
         if (HAL_GetTick() >= cnt_10ms) {
             cnt_10ms = HAL_GetTick() + 10U;
         }
 
-        if (HAL_GetTick() >= cnt_100ms) {
-            cnt_100ms = HAL_GetTick() + 100U;
+        // if (HAL_GetTick() >= cnt_100ms) {
+        //     cnt_100ms = HAL_GetTick() + 100U;
 
-            _sample_fb();
+        //     _sample_fb();
 
-            // Print to uart
-            DB_shtdwn_status_fb_ToStringCSV(&DB_data, log_buf);
-            strcat(log_buf, ",");
-            HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
+        //     // Print to uart
+        //     DB_shtdwn_status_fb_ToStringCSV(&DB_data, log_buf);
+        //     strcat(log_buf, ",");
+        //     HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_ms);
 
-            DB_tlb_intrnl_sig_fb_ToStringCSV(&DB_data, log_buf);
-            strcat(log_buf, ";\n\r");
-            HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_MS);
-        }
+        //     DB_tlb_intrnl_sig_fb_ToStringCSV(&DB_data, log_buf);
+        //     strcat(log_buf, ";\n\r");
+        //     HAL_UART_Transmit(&VCP_UART_Handle, (uint8_t *)log_buf, strlen(log_buf), VCP_TX_LOG_BUF_MAX_TIMEOUT_ms);
+        // }
 
         STAT_LED_Routine();
         SDC_SENS_Routine();
         SDC_ANAL_SENS_Routine();
         SIG_SENS_Routine();
         HVRLYS_SENS_Routine();
-        
+
 
         // needs updated data so leave routine as last
         MCB_SendMessagesRoutine();

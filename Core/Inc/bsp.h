@@ -265,7 +265,7 @@ enum STAT_LED_Device {
 void STAT_LED_toggle(enum STAT_LED_Device device);
 void STAT_LED_enable(enum STAT_LED_Device device);
 void STAT_LED_disable(enum STAT_LED_Device device);
-void STAT_LED_routine(void);
+void STAT_LED_Routine(void);
 
 /* ---------- Private types -------------------------------------------------*/
 
