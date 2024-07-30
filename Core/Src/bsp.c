@@ -361,13 +361,13 @@ void MCB_send_msg(uint32_t id) {
             //assert_param(mcb_tlb_battery_shut_status_shutdown_adc_post_sd_precharge_relay_is_in_range(DB_data.sd_prch_rly_to_sd_mid_out_V));
             //assert_param(mcb_tlb_battery_shut_status_shutdown_adc_ai_rs_opening_delay_caps_is_in_range(DB_data.sd_dly_caps_to_sd_fin_out_airs_V));
 
-            msg.tlb_battery_shut_status.is_shut_closed_pre_ams_imd_latch      = mcb_tlb_battery_shut_status_is_shut_closed_pre_ams_imd_latch_encode(SDC_SENS_Probe_getStatus(SDC_SENS_TSAC_InitialIn) & 0b1U);
+            msg.tlb_battery_shut_status.is_shut_closed_pre_ams_imd_latch      = mcb_tlb_battery_shut_status_is_shut_closed_pre_ams_imd_latch_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_InitialIn) >= 12 & 0b1U);
             msg.tlb_battery_shut_status.is_shut_closed_post_ams_latch         = mcb_tlb_battery_shut_status_is_shut_closed_post_ams_latch_encode(SDC_SENS_Probe_getStatus(SDC_SENS_Post_AMS_IMD_Rly) & 0b1U);
             msg.tlb_battery_shut_status.is_shut_closed_post_imd_latch         = mcb_tlb_battery_shut_status_is_shut_closed_post_imd_latch_encode(SDC_SENS_Probe_getStatus(SDC_SENS_Post_AMS_IMD_Rly) & 0b1U);
-            msg.tlb_battery_shut_status.is_shutdown_closed_pre_tlb_batt_final = mcb_tlb_battery_shut_status_is_shutdown_closed_pre_tlb_batt_final_encode(SDC_SENS_Probe_getStatus(SDC_SENS_TSAC_FinalIn) & 0b1U);
+            msg.tlb_battery_shut_status.is_shutdown_closed_pre_tlb_batt_final = mcb_tlb_battery_shut_status_is_shutdown_closed_pre_tlb_batt_final_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_FinalIn) >= 12 & 0b1U);
             msg.tlb_battery_shut_status.is_ams_error_latched                  = mcb_tlb_battery_shut_status_is_ams_error_latched_encode(SIG_SENS_Probe_getStatus(SIG_SENS_AMS_Err_Latched) & 0b1U);
             msg.tlb_battery_shut_status.is_imd_error_latched                  = mcb_tlb_battery_shut_status_is_imd_error_latched_encode(SIG_SENS_Probe_getStatus(SIG_SENS_IMD_Err_Latched) & 0b1U);
-            msg.tlb_battery_shut_status.is_sd_prch_rly_closed                 = mcb_tlb_battery_shut_status_is_sd_prch_rly_closed_encode(SIG_SENS_Probe_getStatus(SIG_SENS_SDCPrechRlyCmd) & 0b1U);
+            msg.tlb_battery_shut_status.is_sd_prch_rly_closed                 = mcb_tlb_battery_shut_status_is_sd_prch_rly_closed_encode(!SIG_SENS_Probe_getStatus(SIG_SENS_SDCPrechRlyCmd) & 0b1U);
             msg.tlb_battery_shut_status.shutdown_adc_post_sd_precharge_relay  = mcb_tlb_battery_shut_status_shutdown_adc_post_sd_precharge_relay_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_InitialIn));
             msg.tlb_battery_shut_status.shutdown_adc_ai_rs_opening_delay_caps = mcb_tlb_battery_shut_status_shutdown_adc_ai_rs_opening_delay_caps_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_FinalIn));
             // clang-format on
