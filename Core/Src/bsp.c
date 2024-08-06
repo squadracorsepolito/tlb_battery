@@ -340,7 +340,7 @@ void MCB_send_msg(uint32_t id) {
 
             CAN_CAN1_tx_header.DLC = mcb_tlb_bat_sd_csensing_status_pack(buffer, &msg.tlb_bat_sdc_sensing_status, 8);
             break;
-        case MCB_TLB_BATTERY_HELO:
+        case MCB_TLB_BAT_HELLO_FRAME_ID:
 
             msg.tlb_bat_hello.fw_major_version = mcb_tlb_bat_hello_fw_major_version_encode(VERSION_MAJOR);
             msg.tlb_bat_hello.fw_minor_version = mcb_tlb_bat_hello_fw_minor_version_encode(VERSION_MINOR);

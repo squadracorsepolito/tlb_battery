@@ -30,6 +30,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "bsp.h"
+#include "mcb.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -104,7 +105,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
-    MCB_send_msg(MCB_TLB_BATTERY_HELO);
+    MCB_send_msg(MCB_TLB_BAT_HELLO_FRAME_ID);
   /* USER CODE END 2 */
 
   /* Infinite loop */
