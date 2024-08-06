@@ -227,7 +227,7 @@ void HVRLYS_SENS_Routine(void);
 /* ---------- Exported variables --------------------------------------------*/
 
 /* ---------- Exported macros -----------------------------------------------*/
-#define MCB_TLB_BATTERY_HELO (0x018U)
+
 /* ---------- Exported functions --------------------------------------------*/
 
 void MCB_send_msg(uint32_t id);

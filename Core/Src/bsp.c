@@ -137,8 +137,8 @@ void SDC_ANAL_SENS_Routine(void) {
 static const struct GPIO_Tuple SIG_SENS_Probe_to_GPIO_Tuple_map[SIG_SENS_Probe_NUM] = {
     [SIG_SENS_AMS_Err_Latched] = {.GPIO_Port = AMS_ERR_LATCH_GPIO_IN_GPIO_Port, .GPIO_Pin = AMS_ERR_LATCH_GPIO_IN_Pin},
     [SIG_SENS_IMD_Err_Latched] = {.GPIO_Port = IMD_ERR_LATCH_GPIO_IN_GPIO_Port, .GPIO_Pin = IMD_ERR_LATCH_GPIO_IN_Pin},
-    [SIG_SENS_SDCPrechBypassRlyCmd]  = {.GPIO_Port = SDC_PRECH_CMD__INT_STATE_OPEN_GPIO_IN_GPIO_Port,
-                                  .GPIO_Pin  = SDC_PRECH_CMD__INT_STATE_OPEN_GPIO_IN_Pin},
+    [SIG_SENS_SDCPrechBypassRlyCmd] = {.GPIO_Port = SDC_PRECH_CMD__INT_STATE_OPEN_GPIO_IN_GPIO_Port,
+                                       .GPIO_Pin  = SDC_PRECH_CMD__INT_STATE_OPEN_GPIO_IN_Pin},
     [SIG_SENS_DCBusOver60V] = {.GPIO_Port = DCBUS_OVER_60V_GPIO_IN_GPIO_Port, .GPIO_Pin = DCBUS_OVER_60V_GPIO_IN_Pin},
     [SIG_SENS_TSAL_Green]   = {.GPIO_Port = TSAL_GREEN_GPIO_IN_GPIO_Port, .GPIO_Pin = TSAL_GREEN_GPIO_IN_Pin},
     [SIG_SENS_STG_on_AIR_Pos_MechStateSig] = {.GPIO_Port = nSTG_AIR_POS_GPIO_IN_GPIO_Port,
@@ -160,7 +160,7 @@ static uint8_t SIG_SENS_GPIO_invert_vector[SIG_SENS_Probe_NUM] = {[SIG_SENS_AMS_
                                                                   [SIG_SENS_STG_on_AIR_Neg_MechStateSig] = 1U,
                                                                   [SIG_SENS_AnyImpl_Latched]             = 0U,
                                                                   [SIG_SENS_Impl_HVRlysState]            = 0U,
-                                                                  [SIG_SENS_Impl_DCBus]          = 0U};
+                                                                  [SIG_SENS_Impl_DCBus]                  = 0U};
 
 /*---------- Private function prototypes ------------------------------------*/
 
@@ -223,12 +223,13 @@ static const struct GPIO_Tuple HVRLYS_SENS_Probe_to_GPIO_Tuple_map[HVRLYS_SENS_P
                                                     .GPIO_Pin  = DCBUS_PRECH__MECH_STATE_OPEN_GPIO_IN_Pin},
 };
 
-static uint8_t HVRLYS_SENS_GPIO_invert_vector[SIG_SENS_Probe_NUM] = {[HVRLYS_SENS_AIR_Pos_Cmd]                    = 0U,
-                                                                     [HVRLYS_SENS_AIR_Pos_MechStateClosed]        = 1U,
-                                                                     [HVRLYS_SENS_AIR_Neg_Cmd]                    = 0U,
-                                                                     [HVRLYS_SENS_AIR_Neg_MechStateClosed]        = 1U,
-                                                                     [HVRLYS_SENS_DCBus_PrechRly_Cmd]             = 0U,
-                                                                     [HVRLYS_SENS_DCBus_PrechRly_MechStateClosed] = 1U};
+static uint8_t HVRLYS_SENS_GPIO_invert_vector[HVRLYS_SENS_Probe_NUM] = {
+    [HVRLYS_SENS_AIR_Pos_Cmd]                    = 0U,
+    [HVRLYS_SENS_AIR_Pos_MechStateClosed]        = 1U,
+    [HVRLYS_SENS_AIR_Neg_Cmd]                    = 0U,
+    [HVRLYS_SENS_AIR_Neg_MechStateClosed]        = 1U,
+    [HVRLYS_SENS_DCBus_PrechRly_Cmd]             = 0U,
+    [HVRLYS_SENS_DCBus_PrechRly_MechStateClosed] = 1U};
 /*---------- Private function prototypes ------------------------------------*/
 
 /*---------- Exported Variables ---------------------------------------------*/
@@ -346,7 +347,7 @@ void MCB_send_msg(uint32_t id) {
             msg.tlb_bat_hello.fw_minor_version = mcb_tlb_bat_hello_fw_minor_version_encode(VERSION_MINOR);
             msg.tlb_bat_hello.fw_patch_version = mcb_tlb_bat_hello_fw_patch_version_encode(VERSION_PATCH);
 
-            CAN_CAN1_tx_header.DLC = mcb_tlb_bat_hello_pack(buffer, &msg.tlb_bat_hello,8);
+            CAN_CAN1_tx_header.DLC = mcb_tlb_bat_hello_pack(buffer, &msg.tlb_bat_hello, 8);
             break;
         default:
             return;
@@ -357,7 +358,7 @@ void MCB_send_msg(uint32_t id) {
 
 void MCB_SendMessagesRoutine(void) {
     //static volatile uint32_t routine_1ms_tim   = 0U;
-    static volatile uint32_t routine_10ms_tim  = 0U;
+    static volatile uint32_t routine_10ms_tim = 0U;
     //static volatile uint32_t routine_100ms_tim = 0U;
 
     // 100 ms messages
@@ -433,9 +434,9 @@ void STAT_LED_Routine(void) {
             STAT_LED_disable(STAT_LED_ERR);
         }
     }
-    if(SIG_SENS_Probe_getStatus(SIG_SENS_TSAL_Green)){
+    if (SIG_SENS_Probe_getStatus(SIG_SENS_TSAL_Green)) {
         STAT_LED_enable(STAT_LED_USER2);
-    }else{
+    } else {
         STAT_LED_disable(STAT_LED_USER2);
     }
 }

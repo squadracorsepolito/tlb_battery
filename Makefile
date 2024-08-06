@@ -15,8 +15,8 @@
 ######################################
 #CANID_XCP_HOST_TO_TARGET__HEX=008
 #CANID_XCP_TARGET_TO_HOST__HEX=182
-CANID_XCP_HOST_TO_TARGET__HEX=286
-CANID_XCP_TARGET_TO_HOST__HEX=464
+CANID_XCP_HOST_TO_TARGET__HEX=2D6
+CANID_XCP_TARGET_TO_HOST__HEX=461
 
 ######################################
 # target
@@ -157,14 +157,17 @@ C_INCLUDES =  \
 
 
 # compile gcc flags
-ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -fstack-usage
+ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT)
 
-CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -fstack-usage
+CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT)
 
 ifeq ($(DEBUG), 1)
-CFLAGS += -g -gdwarf-2 -ggdb
+CFLAGS += -g -gdwarf -ggdb
 endif
 
+# Add additional flags
+CFLAGS += -Wall -fdata-sections -ffunction-sections -fstack-usage
+ASFLAGS += -Wall -fdata-sections -ffunction-sections -fstack-usage
 
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
@@ -215,7 +218,7 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(HEX) $< $@
-	
+
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(BIN) $< $@
 
