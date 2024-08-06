@@ -47,22 +47,21 @@ volatile uint32_t ERR_flags;
     (24.0) /*!< The maximum physical value of the SDC read by the ADC that corresponds to it's full dynamic range */
 #define SDC_ANAL_SENS_READING_GAIN \
     (SDC_ANAL_SENS_PHYSICAL_FULL_RANGE_V / ADC_ADC1_VREF_V) /*!< Gain to get physical value from ADC output */
-#define SDC_ANAL_SENS_READING_OFFSET_V (0.600) /*!< SDC offset to add after conversion due to error in reading */
+#define SDC_ANAL_SENS_READING_OFFSET_V (0.210) /*!< SDC offset to add after conversion due to error in reading */
 
 /*---------- Private macro --------------------------------------------------*/
 
 /*---------- Private variables ----------------------------------------------*/
 
 static const struct GPIO_Tuple SDC_SENS_Probe_to_GPIO_Tuple_map[SDC_SENS_Probe_NUM] = {
-    [SDC_SENS_TSAC_InitialIn] = {.GPIO_Port = SDC_TSAC_INIT_IN_ADC_IN_GPIO_Port,
-                                      .GPIO_Pin  = SDC_TSAC_INIT_IN_ADC_IN_Pin},
-    [SDC_SENS_Post_AMS_IMD_Rly]    = {.GPIO_Port = SDC_POST_AMS_IMD_RLY_GPIO_IN_GPIO_Port,
-                                      .GPIO_Pin  = SDC_POST_AMS_IMD_RLY_GPIO_IN_Pin},
-    [SDC_SENS_TSAC_FinalIn]   = {.GPIO_Port = SDC_TSAC_FINAL_IN_ADC_IN_GPIO_Port,
-                                      .GPIO_Pin  = SDC_TSAC_FINAL_IN_ADC_IN_Pin}
-};
+    [SDC_SENS_TSAC_InitialIn]   = {.GPIO_Port = SDC_TSAC_INIT_IN_ADC_IN_GPIO_Port,
+                                   .GPIO_Pin  = SDC_TSAC_INIT_IN_ADC_IN_Pin},
+    [SDC_SENS_Post_AMS_IMD_Rly] = {.GPIO_Port = SDC_POST_AMS_IMD_RLY_GPIO_IN_GPIO_Port,
+                                   .GPIO_Pin  = SDC_POST_AMS_IMD_RLY_GPIO_IN_Pin},
+    [SDC_SENS_TSAC_FinalIn]     = {.GPIO_Port = SDC_TSAC_FINAL_IN_ADC_IN_GPIO_Port,
+                                   .GPIO_Pin  = SDC_TSAC_FINAL_IN_ADC_IN_Pin}};
 static const enum ADC_Channel SDC_ANAL_SENS_Probe_to_ADC_Channel_map[SDC_ANAL_SENS_Probe_NUM] =
-    {[SDC_ANAL_SENS_TSAC_InitialIn] = ADC_Channel6, [SDC_ANAL_SENS_TSAC_FinalIn] = ADC_Channel8};
+    {[SDC_ANAL_SENS_TSAC_InitialIn] = ADC_Channel13, [SDC_ANAL_SENS_TSAC_FinalIn] = ADC_Channel0};
 
 /*---------- Private function prototypes ------------------------------------*/
 
@@ -103,7 +102,7 @@ float SDC_ANAL_SENS_Probe_sampleVoltage(enum SDC_ANAL_SENS_Probe probe) {
     enum ADC_Channel chnl = SDC_ANAL_SENS_Probe_to_ADC_Channel_map[probe];
     //int16_t adcVal        = ADC_ADC1_getChannelRaw(chnl);
     int16_t adcVal = ADC_ADC1_getChannelRawFiltered(chnl);
-    if (!(adcVal > 0)) {
+    if (!(adcVal >= 0)) {
         return (-1.0f);
     }
     float physicalVal = ADC_CONV_RAW_TO_V(adcVal, ADC_GET_RESOLUTION_BITS(&hadc1), ADC_ADC1_VREF_V);
@@ -138,9 +137,9 @@ void SDC_ANAL_SENS_Routine(void) {
 static const struct GPIO_Tuple SIG_SENS_Probe_to_GPIO_Tuple_map[SIG_SENS_Probe_NUM] = {
     [SIG_SENS_AMS_Err_Latched] = {.GPIO_Port = AMS_ERR_LATCH_GPIO_IN_GPIO_Port, .GPIO_Pin = AMS_ERR_LATCH_GPIO_IN_Pin},
     [SIG_SENS_IMD_Err_Latched] = {.GPIO_Port = IMD_ERR_LATCH_GPIO_IN_GPIO_Port, .GPIO_Pin = IMD_ERR_LATCH_GPIO_IN_Pin},
-    [SIG_SENS_SDCPrechRlyCmd]  = {.GPIO_Port = SDC_PRECH_CMD__INT_STATE_OPEN_GPIO_IN_GPIO_Port,
+    [SIG_SENS_SDCPrechBypassRlyCmd]  = {.GPIO_Port = SDC_PRECH_CMD__INT_STATE_OPEN_GPIO_IN_GPIO_Port,
                                   .GPIO_Pin  = SDC_PRECH_CMD__INT_STATE_OPEN_GPIO_IN_Pin},
-    [SIG_SENS_DCBusOver60V] = {.GPIO_Port = nDCBUS_OVER_60V_GPIO_IN_GPIO_Port, .GPIO_Pin = nDCBUS_OVER_60V_GPIO_IN_Pin},
+    [SIG_SENS_DCBusOver60V] = {.GPIO_Port = DCBUS_OVER_60V_GPIO_IN_GPIO_Port, .GPIO_Pin = DCBUS_OVER_60V_GPIO_IN_Pin},
     [SIG_SENS_TSAL_Green]   = {.GPIO_Port = TSAL_GREEN_GPIO_IN_GPIO_Port, .GPIO_Pin = TSAL_GREEN_GPIO_IN_Pin},
     [SIG_SENS_STG_on_AIR_Pos_MechStateSig] = {.GPIO_Port = nSTG_AIR_POS_GPIO_IN_GPIO_Port,
                                               .GPIO_Pin  = nSTG_AIR_POS_GPIO_IN_Pin},
@@ -148,20 +147,20 @@ static const struct GPIO_Tuple SIG_SENS_Probe_to_GPIO_Tuple_map[SIG_SENS_Probe_N
                                               .GPIO_Pin  = nSTG_AIR_NEG_GPIO_IN_Pin},
     [SIG_SENS_AnyImpl_Latched]             = {.GPIO_Port = ANY_IMPL_ERR_LATCH_GPIO_IN_GPIO_Port,
                                               .GPIO_Pin  = ANY_IMPL_ERR_LATCH_GPIO_IN_Pin},
-    [SIG_SENS_Impl_AIRsSignals]            = {.GPIO_Port = DCBUS_RELAYS_IMPL_GPIO_IN_GPIO_Port,
+    [SIG_SENS_Impl_HVRlysState]            = {.GPIO_Port = DCBUS_RELAYS_IMPL_GPIO_IN_GPIO_Port,
                                               .GPIO_Pin  = DCBUS_RELAYS_IMPL_GPIO_IN_Pin},
-    [SIG_SENS_Impl_HVRlysSignals] = {.GPIO_Port = DCBUS_IMPL_GPIO_IN_GPIO_Port, .GPIO_Pin = DCBUS_IMPL_GPIO_IN_Pin}};
+    [SIG_SENS_Impl_DCBus] = {.GPIO_Port = DCBUS_IMPL_GPIO_IN_GPIO_Port, .GPIO_Pin = DCBUS_IMPL_GPIO_IN_Pin}};
 
-static uint8_t SIG_SENS_GPIO_invert_matrix[SIG_SENS_Probe_NUM] = {[SIG_SENS_AMS_Err_Latched]             = 0U,
+static uint8_t SIG_SENS_GPIO_invert_vector[SIG_SENS_Probe_NUM] = {[SIG_SENS_AMS_Err_Latched]             = 0U,
                                                                   [SIG_SENS_IMD_Err_Latched]             = 0U,
-                                                                  [SIG_SENS_SDCPrechRlyCmd]              = 0U,
-                                                                  [SIG_SENS_DCBusOver60V]                = 1U,
+                                                                  [SIG_SENS_SDCPrechBypassRlyCmd]        = 1U,
+                                                                  [SIG_SENS_DCBusOver60V]                = 0U,
                                                                   [SIG_SENS_TSAL_Green]                  = 0U,
                                                                   [SIG_SENS_STG_on_AIR_Pos_MechStateSig] = 1U,
                                                                   [SIG_SENS_STG_on_AIR_Neg_MechStateSig] = 1U,
                                                                   [SIG_SENS_AnyImpl_Latched]             = 0U,
-                                                                  [SIG_SENS_Impl_AIRsSignals]            = 0U,
-                                                                  [SIG_SENS_Impl_HVRlysSignals]          = 0U};
+                                                                  [SIG_SENS_Impl_HVRlysState]            = 0U,
+                                                                  [SIG_SENS_Impl_DCBus]          = 0U};
 
 /*---------- Private function prototypes ------------------------------------*/
 
@@ -177,7 +176,7 @@ uint8_t SIG_SENS_Probe_sampleStatus(enum SIG_SENS_Probe probe) {
     uint16_t pin       = SIG_SENS_Probe_to_GPIO_Tuple_map[probe].GPIO_Pin;
 
     // Invert reading if values on GPIO are inverted
-    GPIO_PinState compareValue = SIG_SENS_GPIO_invert_matrix[probe] ? GPIO_PIN_RESET : GPIO_PIN_SET;
+    GPIO_PinState compareValue = SIG_SENS_GPIO_invert_vector[probe] ? GPIO_PIN_RESET : GPIO_PIN_SET;
     return (HAL_GPIO_ReadPin(port, pin) == compareValue) ? 1 : 0;
 }
 
@@ -224,7 +223,7 @@ static const struct GPIO_Tuple HVRLYS_SENS_Probe_to_GPIO_Tuple_map[HVRLYS_SENS_P
                                                     .GPIO_Pin  = DCBUS_PRECH__MECH_STATE_OPEN_GPIO_IN_Pin},
 };
 
-static uint8_t HVRLYS_SENS_GPIO_invert_matrix[SIG_SENS_Probe_NUM] = {[HVRLYS_SENS_AIR_Pos_Cmd]                    = 0U,
+static uint8_t HVRLYS_SENS_GPIO_invert_vector[SIG_SENS_Probe_NUM] = {[HVRLYS_SENS_AIR_Pos_Cmd]                    = 0U,
                                                                      [HVRLYS_SENS_AIR_Pos_MechStateClosed]        = 1U,
                                                                      [HVRLYS_SENS_AIR_Neg_Cmd]                    = 0U,
                                                                      [HVRLYS_SENS_AIR_Neg_MechStateClosed]        = 1U,
@@ -243,7 +242,7 @@ uint8_t HVRLYS_SENS_Probe_sampleStatus(enum HVRLYS_SENS_Probe probe) {
     uint16_t pin       = HVRLYS_SENS_Probe_to_GPIO_Tuple_map[probe].GPIO_Pin;
 
     // Invert reading if values on GPIO are inverted
-    GPIO_PinState compareValue = HVRLYS_SENS_GPIO_invert_matrix[probe] ? GPIO_PIN_RESET : GPIO_PIN_SET;
+    GPIO_PinState compareValue = HVRLYS_SENS_GPIO_invert_vector[probe] ? GPIO_PIN_RESET : GPIO_PIN_SET;
     return HAL_GPIO_ReadPin(port, pin) == compareValue ? 1 : 0;
 }
 uint8_t HVRLYS_SENS_Probe_getStatus(enum HVRLYS_SENS_Probe probe) {
@@ -298,89 +297,56 @@ void MCB_send_msg(uint32_t id) {
     uint8_t buffer[8] = {0};
 
     union {
-        struct mcb_tlb_battery_tsal_status_t tlb_battery_tsal_status;
-        struct mcb_tlb_battery_shut_status_t tlb_battery_shut_status;
-        //struct mcb_tlb_battery_helo_t tlb_battery_helo;
+        struct mcb_tlb_bat_hello_t tlb_bat_hello;
+        struct mcb_tlb_bat_sd_csensing_status_t tlb_bat_sdc_sensing_status;
+        struct mcb_tlb_bat_signals_status_t tlb_bat_signals_status;
     } msg;
 
     CAN_CAN1_tx_header.StdId = id;
 
     switch (id) {
-        case MCB_TLB_BATTERY_TSAL_STATUS_FRAME_ID:
+        case MCB_TLB_BAT_SIGNALS_STATUS_FRAME_ID:
 
             // clang-format off
-            //assert_param(mcb_tlb_battery_tsal_status_tsal_is_green_on_is_in_range(SIG_SENS_Probe_getStatus(SIG_SENS_TSAL_Green)));
-            //assert_param(mcb_tlb_battery_tsal_status_scs_short2_gnd_air_pos_is_in_range(SIG_SENS_Probe_getStatus(SIG_SENS_STG_on_AIR_Pos_MechStateSig)));
-            //assert_param(mcb_tlb_battery_tsal_status_scs_is_any_short2_gnd_present_is_in_range(DB_data.shrt2gnd_airs & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_tsal_is_dc_bus_over60_v_is_in_range(DB_data.dcbus_over_60v & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_intentional_state_air_neg_is_in_range(DB_data.air_neg_int_sd_rel & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_intentional_state_air_pos_is_in_range(DB_data.air_pos_int_sd_rel & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_intentional_state_relay_precharge_is_in_range(DB_data.dcbus_prch_rly_int_sd_rel & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_tsal_is_air_neg_closed_is_in_range(DB_data.air_neg_aux & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_tsal_is_air_pos_closed_is_in_range(DB_data.air_pos_aux & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_tsal_is_relay_precharge_closed_is_in_range(DB_data.dcbus_prch_rly_aux & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_imp_is_air_neg_imp_present_is_in_range(DB_data.air_neg_impl_err & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_imp_is_air_pos_imp_present_is_in_range(DB_data.air_pos_impl_err & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_imp_is_relay_precharge_imp_present_is_in_range(DB_data.dcbus_prch_rly_impl_err & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_imp_is_dc_bus_voltage_imp_present_is_in_range(DB_data.dcbus_over_60v_impl_err & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_imp_is_any_imp_present_is_in_range(DB_data.any_impl_err & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_imp_is_any_imp_latched_is_in_range(DB_data.any_impl_err_ltch & 0b1U));
-            //assert_param(mcb_tlb_battery_tsal_status_tsal_is_green_on_is_in_range(DB_data.tsal_green & 0b1U));
-
-            msg.tlb_battery_tsal_status.scs_short2_gnd_air_neg             = mcb_tlb_battery_tsal_status_scs_short2_gnd_air_neg_encode(SIG_SENS_Probe_getStatus(SIG_SENS_STG_on_AIR_Neg_MechStateSig) & 0b1U);
-            msg.tlb_battery_tsal_status.scs_short2_gnd_air_pos             = mcb_tlb_battery_tsal_status_scs_short2_gnd_air_pos_encode(SIG_SENS_Probe_getStatus(SIG_SENS_STG_on_AIR_Pos_MechStateSig) & 0b1U);
-            msg.tlb_battery_tsal_status.scs_is_any_short2_gnd_present      = mcb_tlb_battery_tsal_status_scs_is_any_short2_gnd_present_encode((SIG_SENS_Probe_getStatus(SIG_SENS_STG_on_AIR_Pos_MechStateSig) & 0b1U) | (SIG_SENS_Probe_getStatus(SIG_SENS_STG_on_AIR_Neg_MechStateSig) & 0b1U));
-            msg.tlb_battery_tsal_status.tsal_is_dc_bus_over60_v            = mcb_tlb_battery_tsal_status_tsal_is_dc_bus_over60_v_encode(SIG_SENS_Probe_getStatus(SIG_SENS_DCBusOver60V) & 0b1U);
-            msg.tlb_battery_tsal_status.intentional_state_air_neg          = mcb_tlb_battery_tsal_status_intentional_state_air_neg_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Neg_Cmd) & 0b1U);
-            msg.tlb_battery_tsal_status.intentional_state_air_pos          = mcb_tlb_battery_tsal_status_intentional_state_air_pos_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Pos_Cmd) & 0b1U);
-            msg.tlb_battery_tsal_status.intentional_state_relay_precharge  = mcb_tlb_battery_tsal_status_intentional_state_relay_precharge_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_DCBus_PrechRly_Cmd) & 0b1U);
-            msg.tlb_battery_tsal_status.tsal_is_air_neg_closed             = mcb_tlb_battery_tsal_status_tsal_is_air_neg_closed_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Neg_MechStateClosed) & 0b1U);
-            msg.tlb_battery_tsal_status.tsal_is_air_pos_closed             = mcb_tlb_battery_tsal_status_tsal_is_air_pos_closed_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Pos_MechStateClosed) & 0b1U);
-            msg.tlb_battery_tsal_status.tsal_is_relay_precharge_closed     = mcb_tlb_battery_tsal_status_tsal_is_relay_precharge_closed_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_DCBus_PrechRly_MechStateClosed) & 0b1U);
-            msg.tlb_battery_tsal_status.imp_is_air_neg_imp_present         = mcb_tlb_battery_tsal_status_imp_is_air_neg_imp_present_encode(SIG_SENS_Probe_getStatus(SIG_SENS_Impl_AIRsSignals) & 0b1U);
-            msg.tlb_battery_tsal_status.imp_is_air_pos_imp_present         = mcb_tlb_battery_tsal_status_imp_is_air_pos_imp_present_encode(SIG_SENS_Probe_getStatus(SIG_SENS_Impl_AIRsSignals) & 0b1U);
-            msg.tlb_battery_tsal_status.imp_is_relay_precharge_imp_present = mcb_tlb_battery_tsal_status_imp_is_relay_precharge_imp_present_encode(SIG_SENS_Probe_getStatus(SIG_SENS_Impl_HVRlysSignals) & 0b1U);
-            msg.tlb_battery_tsal_status.imp_is_dc_bus_voltage_imp_present  = mcb_tlb_battery_tsal_status_imp_is_dc_bus_voltage_imp_present_encode(0 & 0b1U);
-            msg.tlb_battery_tsal_status.imp_is_any_imp_present             = mcb_tlb_battery_tsal_status_imp_is_any_imp_present_encode(0 & 0b1U);
-            msg.tlb_battery_tsal_status.imp_is_any_imp_latched             = mcb_tlb_battery_tsal_status_imp_is_any_imp_latched_encode(SIG_SENS_Probe_getStatus(SIG_SENS_AnyImpl_Latched) & 0b1U);
-            msg.tlb_battery_tsal_status.tsal_is_green_on                   = mcb_tlb_battery_tsal_status_tsal_is_green_on_encode(SIG_SENS_Probe_getStatus(SIG_SENS_TSAL_Green) & 0b1U);
+            msg.tlb_bat_signals_status.air_pos_cmd_is_active                             = mcb_tlb_bat_signals_status_air_pos_cmd_is_active_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Pos_Cmd));
+            msg.tlb_bat_signals_status.air_pos_is_closed                                 = mcb_tlb_bat_signals_status_air_pos_is_closed_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Pos_MechStateClosed));
+            msg.tlb_bat_signals_status.air_neg_cmd_is_active                             = mcb_tlb_bat_signals_status_air_neg_cmd_is_active_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Neg_Cmd));
+            msg.tlb_bat_signals_status.air_neg_is_closed                                 = mcb_tlb_bat_signals_status_air_neg_is_closed_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_AIR_Neg_MechStateClosed));
+            msg.tlb_bat_signals_status.dcbus_prech_rly_cmd_is_active                     = mcb_tlb_bat_signals_status_dcbus_prech_rly_cmd_is_active_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_DCBus_PrechRly_Cmd));
+            msg.tlb_bat_signals_status.dcbus_prech_rly_is_closed                         = mcb_tlb_bat_signals_status_dcbus_prech_rly_is_closed_encode(HVRLYS_SENS_Probe_getStatus(HVRLYS_SENS_DCBus_PrechRly_MechStateClosed));
+            msg.tlb_bat_signals_status.ams_err_is_active                                 = mcb_tlb_bat_signals_status_ams_err_is_active_encode(SIG_SENS_Probe_getStatus(SIG_SENS_AMS_Err_Latched));
+            msg.tlb_bat_signals_status.imd_err_is_active                                 = mcb_tlb_bat_signals_status_imd_err_is_active_encode(SIG_SENS_Probe_getStatus(SIG_SENS_IMD_Err_Latched));
+            msg.tlb_bat_signals_status.tsal_green_is_active                              = mcb_tlb_bat_signals_status_tsal_green_is_active_encode(SIG_SENS_Probe_getStatus(SIG_SENS_TSAL_Green));
+            msg.tlb_bat_signals_status.dcbus_is_over60_v                                 = mcb_tlb_bat_signals_status_dcbus_is_over60_v_encode(SIG_SENS_Probe_getStatus(SIG_SENS_DCBusOver60V));
+            msg.tlb_bat_signals_status.imp_any_is_active                                 = mcb_tlb_bat_signals_status_imp_any_is_active_encode(SIG_SENS_Probe_getStatus(SIG_SENS_AnyImpl_Latched));
+            msg.tlb_bat_signals_status.imp_hv_relays_state_is_active                     = mcb_tlb_bat_signals_status_imp_hv_relays_state_is_active_encode(SIG_SENS_Probe_getStatus(SIG_SENS_Impl_HVRlysState));
+            msg.tlb_bat_signals_status.imp_dcbus_is_active                               = mcb_tlb_bat_signals_status_imp_dcbus_is_active_encode(SIG_SENS_Probe_getStatus(SIG_SENS_Impl_DCBus));
+            msg.tlb_bat_signals_status.air_pos_stg_mech_state_signal_is_active           = mcb_tlb_bat_signals_status_air_pos_stg_mech_state_signal_is_active_encode(SIG_SENS_Probe_getStatus(SIG_SENS_STG_on_AIR_Pos_MechStateSig));
+            msg.tlb_bat_signals_status.air_neg_stg_mech_state_signal_is_active           = mcb_tlb_bat_signals_status_air_neg_stg_mech_state_signal_is_active_encode(SIG_SENS_Probe_getStatus(SIG_SENS_STG_on_AIR_Neg_MechStateSig));
             // clang-format on
 
-            CAN_CAN1_tx_header.DLC = mcb_tlb_battery_tsal_status_pack(buffer, &msg.tlb_battery_tsal_status, 8);
+            CAN_CAN1_tx_header.DLC = mcb_tlb_bat_signals_status_pack(buffer, &msg.tlb_bat_signals_status, 8);
             break;
-        case MCB_TLB_BATTERY_SHUT_STATUS_FRAME_ID:
+        case MCB_TLB_BAT_SD_CSENSING_STATUS_FRAME_ID:
 
             // clang-format off
-            //assert_param(mcb_tlb_battery_shut_status_is_shut_closed_pre_ams_imd_latch_is_in_range(DB_data.sd_mid_in_to_ams_err_rly & 0b1U));
-            //assert_param(mcb_tlb_battery_shut_status_is_shut_closed_post_ams_latch_is_in_range(DB_data.ams_err_rly_to_imd_err_rly & 0b1U));
-            //assert_param(mcb_tlb_battery_shut_status_is_shut_closed_post_imd_latch_is_in_range(DB_data.imd_err_rly_to_sd_prch_rly & 0b1U));
-            //assert_param(mcb_tlb_battery_shut_status_is_shutdown_closed_pre_tlb_batt_final_is_in_range(DB_data.sd_fnl_in_to_sd_dly_caps & 0b1U));
-            //assert_param(mcb_tlb_battery_shut_status_is_ams_error_latched_is_in_range(DB_data.ams_err & 0b1U));
-            //assert_param(mcb_tlb_battery_shut_status_is_imd_error_latched_is_in_range(DB_data.imd_err & 0b1U));
-            //assert_param(mcb_tlb_battery_shut_status_is_sd_prch_rly_closed_is_in_range(DB_data.sd_prch_rly & 0b1U));
-            //assert_param(mcb_tlb_battery_shut_status_shutdown_adc_post_sd_precharge_relay_is_in_range(DB_data.sd_prch_rly_to_sd_mid_out_V));
-            //assert_param(mcb_tlb_battery_shut_status_shutdown_adc_ai_rs_opening_delay_caps_is_in_range(DB_data.sd_dly_caps_to_sd_fin_out_airs_V));
-
-            msg.tlb_battery_shut_status.is_shut_closed_pre_ams_imd_latch      = mcb_tlb_battery_shut_status_is_shut_closed_pre_ams_imd_latch_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_InitialIn) >= 12 & 0b1U);
-            msg.tlb_battery_shut_status.is_shut_closed_post_ams_latch         = mcb_tlb_battery_shut_status_is_shut_closed_post_ams_latch_encode(SDC_SENS_Probe_getStatus(SDC_SENS_Post_AMS_IMD_Rly) & 0b1U);
-            msg.tlb_battery_shut_status.is_shut_closed_post_imd_latch         = mcb_tlb_battery_shut_status_is_shut_closed_post_imd_latch_encode(SDC_SENS_Probe_getStatus(SDC_SENS_Post_AMS_IMD_Rly) & 0b1U);
-            msg.tlb_battery_shut_status.is_shutdown_closed_pre_tlb_batt_final = mcb_tlb_battery_shut_status_is_shutdown_closed_pre_tlb_batt_final_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_FinalIn) >= 12 & 0b1U);
-            msg.tlb_battery_shut_status.is_ams_error_latched                  = mcb_tlb_battery_shut_status_is_ams_error_latched_encode(SIG_SENS_Probe_getStatus(SIG_SENS_AMS_Err_Latched) & 0b1U);
-            msg.tlb_battery_shut_status.is_imd_error_latched                  = mcb_tlb_battery_shut_status_is_imd_error_latched_encode(SIG_SENS_Probe_getStatus(SIG_SENS_IMD_Err_Latched) & 0b1U);
-            msg.tlb_battery_shut_status.is_sd_prch_rly_closed                 = mcb_tlb_battery_shut_status_is_sd_prch_rly_closed_encode(!SIG_SENS_Probe_getStatus(SIG_SENS_SDCPrechRlyCmd) & 0b1U);
-            msg.tlb_battery_shut_status.shutdown_adc_post_sd_precharge_relay  = mcb_tlb_battery_shut_status_shutdown_adc_post_sd_precharge_relay_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_InitialIn));
-            msg.tlb_battery_shut_status.shutdown_adc_ai_rs_opening_delay_caps = mcb_tlb_battery_shut_status_shutdown_adc_ai_rs_opening_delay_caps_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_FinalIn));
+            msg.tlb_bat_sdc_sensing_status.sdc_tsac_initial_in_is_active = mcb_tlb_bat_sd_csensing_status_sdc_tsac_initial_in_is_active_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_InitialIn) >= (12.0f));
+            msg.tlb_bat_sdc_sensing_status.sdc_post_ams_imd_relay_is_active = mcb_tlb_bat_sd_csensing_status_sdc_post_ams_imd_relay_is_active_encode(SDC_SENS_Probe_getStatus(SDC_SENS_Post_AMS_IMD_Rly));
+            msg.tlb_bat_sdc_sensing_status.sdc_tsac_final_in_is_active         = mcb_tlb_bat_sd_csensing_status_sdc_tsac_final_in_is_active_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_FinalIn) >= (12.0f));
+            msg.tlb_bat_sdc_sensing_status.sdc_prech_bypass_relay_is_closed = mcb_tlb_bat_sd_csensing_status_sdc_prech_bypass_relay_is_closed_encode(SIG_SENS_Probe_getStatus(SIG_SENS_SDCPrechBypassRlyCmd));
+            msg.tlb_bat_sdc_sensing_status.sdc_tsac_initial_in_voltage = mcb_tlb_bat_sd_csensing_status_sdc_tsac_initial_in_voltage_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_InitialIn));
+            msg.tlb_bat_sdc_sensing_status.sdc_tsac_final_in_voltage = mcb_tlb_bat_sd_csensing_status_sdc_tsac_final_in_voltage_encode(SDC_ANAL_SENS_Probe_getVoltage(SDC_ANAL_SENS_TSAC_FinalIn));
             // clang-format on
 
-            CAN_CAN1_tx_header.DLC = mcb_tlb_battery_shut_status_pack(buffer, &msg.tlb_battery_shut_status, 8);
+            CAN_CAN1_tx_header.DLC = mcb_tlb_bat_sd_csensing_status_pack(buffer, &msg.tlb_bat_sdc_sensing_status, 8);
             break;
         case MCB_TLB_BATTERY_HELO:
 
-            buffer[0] = VERSION_MAJOR;
-            buffer[1] = VERSION_MINOR;
-            buffer[2] = VERSION_PATCH;
+            msg.tlb_bat_hello.fw_major_version = mcb_tlb_bat_hello_fw_major_version_encode(VERSION_MAJOR);
+            msg.tlb_bat_hello.fw_minor_version = mcb_tlb_bat_hello_fw_minor_version_encode(VERSION_MINOR);
+            msg.tlb_bat_hello.fw_patch_version = mcb_tlb_bat_hello_fw_patch_version_encode(VERSION_PATCH);
 
-            CAN_CAN1_tx_header.DLC = 3;
+            CAN_CAN1_tx_header.DLC = mcb_tlb_bat_hello_pack(buffer, &msg.tlb_bat_hello,8);
             break;
         default:
             return;
@@ -390,9 +356,9 @@ void MCB_send_msg(uint32_t id) {
 }
 
 void MCB_SendMessagesRoutine(void) {
-    static volatile uint32_t routine_1ms_tim   = 0U;
+    //static volatile uint32_t routine_1ms_tim   = 0U;
     static volatile uint32_t routine_10ms_tim  = 0U;
-    static volatile uint32_t routine_100ms_tim = 0U;
+    //static volatile uint32_t routine_100ms_tim = 0U;
 
     // 100 ms messages
     //if (HAL_GetTick() >= routine_100ms_tim) {
@@ -402,8 +368,8 @@ void MCB_SendMessagesRoutine(void) {
     // 10ms messages
     if (HAL_GetTick() >= routine_10ms_tim) {
         routine_10ms_tim = HAL_GetTick() + 10U;
-        MCB_send_msg(MCB_TLB_BATTERY_TSAL_STATUS_FRAME_ID);
-        MCB_send_msg(MCB_TLB_BATTERY_SHUT_STATUS_FRAME_ID);
+        MCB_send_msg(MCB_TLB_BAT_SIGNALS_STATUS_FRAME_ID);
+        MCB_send_msg(MCB_TLB_BAT_SD_CSENSING_STATUS_FRAME_ID);
     }
 
     //if (HAL_GetTick() >= routine_1ms_tim) {
@@ -466,6 +432,11 @@ void STAT_LED_Routine(void) {
         if (HAL_GetTick() >= show_error_with_delay_tim) {
             STAT_LED_disable(STAT_LED_ERR);
         }
+    }
+    if(SIG_SENS_Probe_getStatus(SIG_SENS_TSAL_Green)){
+        STAT_LED_enable(STAT_LED_USER2);
+    }else{
+        STAT_LED_disable(STAT_LED_USER2);
     }
 }
 

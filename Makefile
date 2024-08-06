@@ -13,8 +13,10 @@
 ######################################
 # FLASH VIA CANBUS CAN-ids of devices
 ######################################
-CANID_XCP_HOST_TO_TARGET__HEX=008
-CANID_XCP_TARGET_TO_HOST__HEX=182
+#CANID_XCP_HOST_TO_TARGET__HEX=008
+#CANID_XCP_TARGET_TO_HOST__HEX=182
+CANID_XCP_HOST_TO_TARGET__HEX=286
+CANID_XCP_TARGET_TO_HOST__HEX=464
 
 ######################################
 # target
@@ -52,7 +54,6 @@ Core/Src/adc.c \
 Core/Src/can.c \
 Core/Src/dma.c \
 Core/Src/iwdg.c \
-Core/Src/spi.c \
 Core/Src/tim.c \
 Core/Src/usart.c \
 Core/Src/stm32f4xx_it.c \
@@ -78,12 +79,11 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_iwdg.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
 Core/Src/system_stm32f4xx.c \
 Core/Src/sysmem.c \
 Core/Src/syscalls.c \
 Core/Src/bsp.c \
-Lib/SCan/SC22EVO/artifacts/c_source/mcb.c
+Lib/SCan/SC24/artifacts/MCB/c_source/mcb.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -149,7 +149,7 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--ILib/SCan/SC22EVO/artifacts/c_source \
+-ILib/SCan/SC24/artifacts/MCB/c_source \
 -ILib/stmlibs \
 -ILib/stmlibs/critical_section \
 -ILib/stmlibs/timebase \
@@ -162,7 +162,7 @@ ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffuncti
 CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -fstack-usage
 
 ifeq ($(DEBUG), 1)
-CFLAGS += -g -gdwarf-2
+CFLAGS += -g -gdwarf-2 -ggdb
 endif
 
 
@@ -178,11 +178,10 @@ LDSCRIPT = STM32F446RETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
-LIBDIR = 
-LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LIBDIR = \
 
 # Additional LD Flags from config file
-ADDITIONALLDFLAGS = -specs=nano.specs -u _printf_float
+ADDITIONALLDFLAGS = -specs=nano.specs -u_printf_float
 
 LDFLAGS = $(MCU) $(ADDITIONALLDFLAGS) -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
@@ -218,8 +217,8 @@ $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(HEX) $< $@
 	
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(BIN) $< $@	
-	
+	$(BIN) $< $@
+
 $(BUILD_DIR):
 	mkdir $@
 
@@ -234,6 +233,7 @@ OPENOCD = "$(OPENOCD_PATH)/openocd"
 else
 OPENOCD = "openocd"
 endif
+
 #######################################
 # flash
 #######################################
@@ -250,7 +250,7 @@ erase: openocd.cfg $(BUILD_DIR)/$(TARGET).elf
 # clean up
 #######################################
 clean:
-	-rm -fR $(BUILD_DIR)
+	-rm -fR $(BUILD_DIR) $(RELEASE_DIR)
 
 
 #######################################
@@ -277,7 +277,7 @@ $(BUILD_DIR)/$(TARGET)_shifted.bin: $(BUILD_DIR)/$(TARGET)_shifted.elf | $(BUILD
 #######################################
 $(BUILD_DIR)/$(TARGET)_shifted.sx: $(BUILD_DIR)/$(TARGET)_shifted.elf | $(BUILD_DIR)
 	$(SREC) $< $@	
-	$(SZ) $@	
+	$(SZ) $@
 
 # The openocd bin path can be either defined in make command via BOOTCOMMANDER_PATH variable (> make BOOTCOMMANDER_PATH=xxx)
 # either it can be added to the PATH environment variable.
@@ -286,6 +286,7 @@ BOOTCOMMANDER = "$(BOOTCOMMANDER_PATH)/BootCommander"
 else
 BOOTCOMMANDER = "BootCommander"
 endif
+
 #######################################
 # can_flash
 #######################################

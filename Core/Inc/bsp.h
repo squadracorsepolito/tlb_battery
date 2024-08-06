@@ -119,14 +119,14 @@ void SDC_ANAL_SENS_Routine(void);
 enum SIG_SENS_Probe {
     SIG_SENS_AMS_Err_Latched,             /*!< Accumulator Managemenet System Error - Latched signal */
     SIG_SENS_IMD_Err_Latched,             /*!< Insulation Monitoring Device Error - Latched signal */
-    SIG_SENS_SDCPrechRlyCmd,              /*!< ShutDownCircuit Precharge Relay Command signal */
+    SIG_SENS_SDCPrechBypassRlyCmd,        /*!< ShutDownCircuit Precharge Bypass Relay Command signal */
     SIG_SENS_DCBusOver60V,                /*!< DC-Bus Over 60V signal */
     SIG_SENS_TSAL_Green,                  /*!< Tractive System Active Light Green signal*/
     SIG_SENS_STG_on_AIR_Pos_MechStateSig, /*!< Short To Gnd on "AIR Positive Mechanical State" Signal */
     SIG_SENS_STG_on_AIR_Neg_MechStateSig, /*!< Short To Gnd on "AIR Negative Mechanical State" Signal */
     SIG_SENS_AnyImpl_Latched,             /*!< Any Implausibility Error - Latched signal */
-    SIG_SENS_Impl_AIRsSignals,            /*!< Implausibility Error on DC-BUS Relays signals */
-    SIG_SENS_Impl_HVRlysSignals,          /*!< Implausibility Error on HV Relays Signals */
+    SIG_SENS_Impl_HVRlysState,            /*!< Implausibility Error HV Relays (AIR Pos/Min, DCBUS Precharge relay) command vs mechanical state differ */
+    SIG_SENS_Impl_DCBus,                  /*!< Implausibility Error DCBus: DCBus less then 60V but AIRs closed */
     SIG_SENS_Probe_NUM                    /*!< Number of SIG_SENS enum values */
 };
 
