@@ -44,10 +44,10 @@ volatile uint32_t ERR_flags;
 /*---------- Private define -------------------------------------------------*/
 
 #define SDC_ANAL_SENS_PHYSICAL_FULL_RANGE_V \
-    (24.0) /*!< The maximum physical value of the SDC read by the ADC that corresponds to it's full dynamic range */
+    (24.65294118) /*!< The maximum physical value of the SDC read by the ADC that corresponds to it's full dynamic range */
 #define SDC_ANAL_SENS_READING_GAIN \
     (SDC_ANAL_SENS_PHYSICAL_FULL_RANGE_V / ADC_ADC1_VREF_V) /*!< Gain to get physical value from ADC output */
-#define SDC_ANAL_SENS_READING_OFFSET_V (0.210) /*!< SDC offset to add after conversion due to error in reading */
+#define SDC_ANAL_SENS_READING_OFFSET_V (0.0) /*!< SDC offset to add after conversion due to error in reading */
 
 /*---------- Private macro --------------------------------------------------*/
 

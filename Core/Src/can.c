@@ -69,7 +69,7 @@ void MX_CAN1_Init(void)
     
     CAN_FilterTypeDef filter;
 
-#define MCB_DIAGTOOL_xcpTX (0x008U) // Accepts XCP message for flashing via can
+#define MCB_DIAGTOOL_xcpTX (0x286U) // Accepts XCP message for flashing via can
 
     filter.FilterScale = CAN_FILTERSCALE_16BIT;
     filter.FilterMode  = CAN_FILTERMODE_IDLIST;
@@ -80,12 +80,11 @@ void MX_CAN1_Init(void)
     */
     filter.FilterIdLow  = MCB_DIAGTOOL_xcpTX << 5U;     // Filter for this ID (shift by 5 see filtering registers on RM)
     filter.FilterIdHigh = MCB_DIAGTOOL_xcpTX << 5;      // repeat the filter to not leave it empty
-    filter.FilterMaskIdHigh = MCB_DIAGTOOL_xcpTX << 5;  // repeat the filter to not leave it empty
-    filter.FilterMaskIdLow  = MCB_DIAGTOOL_xcpTX << 5;  // repeat the filter to not leave it empty
     //
     filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-    filter.FilterBank           = 1;
+    filter.FilterBank           = 0;
     filter.FilterActivation     = ENABLE;
+    filter.SlaveStartFilterBank = 14;
 
     HAL_CAN_ConfigFilter(&hcan1, &filter);
 
@@ -123,6 +122,8 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /* CAN1 interrupt Init */
+    HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
     HAL_NVIC_SetPriority(CAN1_SCE_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(CAN1_SCE_IRQn);
   /* USER CODE BEGIN CAN1_MspInit 1 */
@@ -149,6 +150,7 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
     HAL_GPIO_DeInit(GPIOB, SN65HVD23x_R_CAN_RX_Pin|SN65HVD23x_D_CAN_TX_Pin);
 
     /* CAN1 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(CAN1_RX0_IRQn);
     HAL_NVIC_DisableIRQ(CAN1_SCE_IRQn);
   /* USER CODE BEGIN CAN1_MspDeInit 1 */
 
