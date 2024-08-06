@@ -58,7 +58,7 @@ void MX_CAN1_Init(void)
   hcan1.Init.TimeTriggeredMode = DISABLE;
   hcan1.Init.AutoBusOff = ENABLE;
   hcan1.Init.AutoWakeUp = DISABLE;
-  hcan1.Init.AutoRetransmission = DISABLE;
+  hcan1.Init.AutoRetransmission = ENABLE;
   hcan1.Init.ReceiveFifoLocked = DISABLE;
   hcan1.Init.TransmitFifoPriority = DISABLE;
   if (HAL_CAN_Init(&hcan1) != HAL_OK)
@@ -69,7 +69,6 @@ void MX_CAN1_Init(void)
     
     CAN_FilterTypeDef filter;
 
-#define MCB_DIAGTOOL_xcpTX (0x286U) // Accepts XCP message for flashing via can
 
     filter.FilterScale = CAN_FILTERSCALE_16BIT;
     filter.FilterMode  = CAN_FILTERMODE_IDLIST;
@@ -78,9 +77,8 @@ void MX_CAN1_Init(void)
         STDID + RTR + IDE + 3 most significant bits of EXTID (not used in 16 bit mode)
         Hence if you care only to filter by id shift by 5
     */
-    filter.FilterIdLow  = MCB_DIAGTOOL_xcpTX << 5U;     // Filter for this ID (shift by 5 see filtering registers on RM)
-    filter.FilterIdHigh = MCB_DIAGTOOL_xcpTX << 5;      // repeat the filter to not leave it empty
-    //
+    filter.FilterIdLow  = MCB_DIAG_TOOL_XCP_TX_TLB_BAT_FRAME_ID << 5U;     // Filter for this ID (shift by 5 see filtering registers on RM)
+    filter.FilterIdHigh = MCB_DIAG_TOOL_XCP_TX_TLB_BAT_FRAME_ID << 5U;      // repeat the filter to not leave it empty
     filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
     filter.FilterBank           = 0;
     filter.FilterActivation     = ENABLE;
@@ -166,7 +164,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     if(hcan == &MCB_Handle){
         if(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, buffer) == HAL_OK) {
             // Reset when preparing for flash via CAN bus
-            if(rx_header.StdId == MCB_DIAGTOOL_xcpTX && buffer[0] == 0xff && buffer[1] == 0x00) {
+            if(rx_header.StdId == MCB_DIAG_TOOL_XCP_TX_TLB_BAT_FRAME_ID && buffer[0] == 0xff && buffer[1] == 0x00) {
                 NVIC_SystemReset();
             }
         }
